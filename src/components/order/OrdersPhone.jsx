@@ -373,7 +373,7 @@ export default function OrdersPhone() {
                       <div class="item-price">${
                         totalItemPrice ||
                         parseFloat(
-                          order.totalPrice * order.items[0].quantity
+                          order.totalPrice / order.items[0].quantity
                         ).toFixed(2)
                       } </div>
                     </div>
@@ -388,9 +388,7 @@ export default function OrdersPhone() {
               <span>${
                 order.items[0].productType != "custom product"
                   ? formatCurrency(+order.totalPrice)
-                  : parseFloat(
-                      order.items[0].quantity * order.totalPrice
-                    ).toFixed(2)
+                  : parseFloat(order.totalPrice).toFixed(2)
               }</span>
             </div>
             <div class="total-line">
@@ -402,9 +400,7 @@ export default function OrdersPhone() {
               <span>${
                 order.items[0].productType != "custom product"
                   ? formatCurrency(+order.totalPrice)
-                  : parseFloat(
-                      order.items[0].quantity * order.totalPrice
-                    ).toFixed(2)
+                  : parseFloat(order.totalPrice).toFixed(2)
               }</span>
             </div>
           </div>
@@ -602,9 +598,7 @@ export default function OrdersPhone() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-white">
                       {order.items[0].productType == "custom product"
-                        ? parseFloat(
-                            order?.items[0].quantity * order?.totalPrice
-                          ).toFixed(2)
+                        ? parseFloat(order?.totalPrice).toFixed(2)
                         : order?.totalPrice}
                     </div>
                   </td>

@@ -374,7 +374,7 @@ export default function OrdersPhone() {
                         totalItemPrice ||
                         parseFloat(
                           order.totalPrice * order.items[0].quantity
-                        ).toFixed(0)
+                        ).toFixed(2)
                       } </div>
                     </div>
                   `;

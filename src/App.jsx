@@ -28,7 +28,7 @@ import NotFound from "./pages/NotFound";
 import EditProduct from "./components/dishes/EditProduct";
 import EditSubCategory from "./components/subCategory/EditSubCategory";
 import Offer from "./pages/Offer";
-import ViewSubCategoryDetails from "./components/subCategory/viewSubCategoryDetails";
+import ViewSubCategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
 
 function App() {
   const router = createBrowserRouter([

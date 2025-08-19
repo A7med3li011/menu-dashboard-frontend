@@ -103,7 +103,7 @@ export default function DishAdd() {
     mutationKey: ["add-product"],
     mutationFn: (payload) => createProduct(payload, token),
     onSuccess: (res) => {
-      toast.success("Dish added successfully!");
+      toast.success("Product added successfully!");
       navigate("/managment");
     },
     onError: (error) => {
@@ -388,7 +388,7 @@ export default function DishAdd() {
             <div className="w-full">
               <label className="block font-semibold mb-2">Price *</label>
               <input
-                type="number"
+                type="text"
                 name="price"
                 value={formik.values.price}
                 onChange={formik.handleChange}

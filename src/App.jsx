@@ -25,7 +25,7 @@ import MakeOrder from "./components/order/MakeOrder";
 import { Table } from "lucide-react";
 import Tables from "./pages/Tables";
 import NotFound from "./pages/NotFound";
-import EditProduct from "./components/dishes/editProduct";
+import EditProduct from "./components/dishes/EditProduct";
 import EditSubCategory from "./components/subCategory/EditSubCategory";
 import Offer from "./pages/Offer";
 import ViewSubCategoryDetails from "./components/subCategory/viewSubCategoryDetails";

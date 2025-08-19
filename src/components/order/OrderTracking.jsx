@@ -26,6 +26,7 @@ const OrderTracking = () => {
   const handleCancelOrder = () => {
     setSelectedTable(null);
     setOrderConfirmed(false);
+    navigate("/make-order");
   };
 
   let newOrder = {
@@ -47,7 +48,7 @@ const OrderTracking = () => {
     mutationKey: ["create-order"],
     mutationFn: (payload) => createOrder(payload.data, token),
     onSuccess: () => {
-      navigate("/");
+      navigate("/orders-tables");
       toast.success("order created successfully");
       data = [];
     },

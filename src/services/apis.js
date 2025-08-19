@@ -1,7 +1,9 @@
 import axios from "axios";
 
-export const baseUrl = `http://localhost:3001/api/v1`;
-export const imageBase = `http://localhost:3001/uploads/`;
+export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+// export const baseUrl = `http://localhost:3001/api/v1`;
+// export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
   const { data } = await axios.post(`${baseUrl}/auth/login`, body, {});
@@ -133,6 +135,17 @@ export async function getproducts(token) {
 
   return data.data;
 }
+
+export async function getProductById(id, token) {
+  const { data } = await axios.get(`${baseUrl}/product/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
+}
+
 export async function getAllOrdersWebsite(page, token, bool, search) {
   const data = await axios.get(
     `${baseUrl}/order/?page=${page}&from=false&search=${search || ""}`,
@@ -258,12 +271,181 @@ export async function getStaff(token) {
   return data.data || [];
 }
 
-export async function getAllExtras(token) {
-  const { data } = await axios.get(`${baseUrl}/products/:productId/extras`, {
+export async function getAllExtras(productId, token) {
+  const { data } = await axios.get(`${baseUrl}/products/${productId}/extras`, {
     headers: {
       token: `${token}`,
     },
   });
 
+  return data;
+}
+
+export async function createExtra(productId, body, token) {
+  const { data } = await axios.post(
+    `${baseUrl}/products/${productId}/extras`,
+    body,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+export async function updateExtra(productId, extraId, body, token) {
+  const { data } = await axios.put(
+    `${baseUrl}/products/${productId}/extras/${extraId}`,
+    body,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+
+export async function deleteExtra(productId, extraId, token) {
+  const { data } = await axios.delete(
+    `${baseUrl}/products/${productId}/extras/${extraId}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+
+export async function deleteProduct(productId, token) {
+  const { data } = await axios.delete(`${baseUrl}/product/${productId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
+}
+
+export async function updateProduct(productId, body, token) {
+  const { data } = await axios.put(`${baseUrl}/product/${productId}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
+}
+
+export async function deleteSubCategory(subCategoryId, token) {
+  const { data } = await axios.delete(
+    `${baseUrl}/subcategory/${subCategoryId}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+
+export async function getSubCategoryById(subCategoryId, token) {
+  const { data } = await axios.get(`${baseUrl}/subcategory/${subCategoryId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function updateSubCategory(subCategoryId, body, token) {
+  const { data } = await axios.put(
+    `${baseUrl}/subCategory/${subCategoryId}`,
+    body,
+    {
+      headers: {
+        Token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+
+export async function deleteCategory(categoryId, token) {
+  const { data } = await axios.delete(`${baseUrl}/category/${categoryId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
+}
+
+export async function updateCategory(categoryId, body, token) {
+  const { data } = await axios.put(`${baseUrl}/category/${categoryId}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
+}
+
+export async function createOffer(body, token) {
+  const { data } = await axios.post(`${baseUrl}/offers`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
+}
+export async function getOffers(token) {
+  const { data } = await axios.get(`${baseUrl}/offers`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function getSpecificOffer(id, token) {
+  const { data } = await axios.get(`${baseUrl}/offers/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function deActiveOffer(offerId, token) {
+  const { data } = await axios.patch(
+    `${baseUrl}/offers/deActive/${offerId}`,
+    {},
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+
+export async function activeOffer(offerId, token) {
+  const { data } = await axios.patch(
+    `${baseUrl}/offers/active/${offerId}`,
+    {},
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
   return data;
 }

@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 export default function OrdersPhone() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [switcher, setSwitcher] = useState(1); // Added filter state
   const [currentPage, setCurrentPage] = useState(1); // Renamed for clarity
   const [allOrders, setAllOrders] = useState([]); // Store all orders for filtering
@@ -26,16 +27,16 @@ export default function OrdersPhone() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["all-orders-phone-complete", search, switcher],
+    queryKey: ["all-orders-phone-complete", activeSearch, switcher],
     queryFn: async () => {
       // Fetch first page to get total pages
-      const firstPage = await getAllOrdersApp(1, token, 1, search);
+      const firstPage = await getAllOrdersApp(1, token, 1, activeSearch);
       const totalPages = firstPage.data.pagination.totalPages;
 
       // Fetch all pages
       const allPagesPromises = [];
       for (let page = 1; page <= totalPages; page++) {
-        allPagesPromises.push(getAllOrdersApp(page, token, 1, search));
+        allPagesPromises.push(getAllOrdersApp(page, token, 1, activeSearch));
       }
 
       const allPagesData = await Promise.all(allPagesPromises);
@@ -311,6 +312,7 @@ export default function OrdersPhone() {
           </div>
           
           <div class="order-info">
+            <div><strong>Address: </strong> ${order.location}</div>
             <div><strong>Order #:</strong> ${order.OrderNumber}</div>
             <div><strong>Date:</strong> ${formatDate(order.createdAt)}</div>
           </div>
@@ -354,9 +356,6 @@ export default function OrdersPhone() {
                                 (extra) => `
                               <div class="extra-item">
                                 <span>+ ${extra.name || "Extra"}</span>
-                                <span>+${formatCurrency(
-                                  +extra.price || 0
-                                )}</span>
                               </div>
                             `
                               )
@@ -486,7 +485,17 @@ export default function OrdersPhone() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            if (e.target.value === "") {
+              setActiveSearch("");
+            }
+          }}
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              setActiveSearch(search);
+            }
+          }}
           className="px-3 block border-[1px] border-[#FFBC0F] mb-10 py-2 rounded-md focus:outline-none bg-black"
           placeholder="Search here"
         />

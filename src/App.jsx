@@ -25,6 +25,10 @@ import MakeOrder from "./components/order/MakeOrder";
 import { Table } from "lucide-react";
 import Tables from "./pages/Tables";
 import NotFound from "./pages/NotFound";
+import EditProduct from "./components/dishes/editProduct";
+import EditSubCategory from "./components/subCategory/EditSubCategory";
+import Offer from "./pages/Offer";
+import ViewSubCategoryDetails from "./components/subCategory/viewSubCategoryDetails";
 
 function App() {
   const router = createBrowserRouter([
@@ -65,6 +69,30 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
               <AddStaff />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/product/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <EditProduct />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/subcategory/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <EditSubCategory />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/subcategoryDetails/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <ViewSubCategoryDetails />
             </RoleBasedRoute>
           ),
         },
@@ -121,6 +149,14 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
               <Kitchen />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/offer",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <Offer />
             </RoleBasedRoute>
           ),
         },

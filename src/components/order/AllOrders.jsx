@@ -9,6 +9,7 @@ import { TableOfContents } from "lucide-react";
 export default function AllOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [switcher, setSwitcher] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [allOrders, setAllOrders] = useState([]);
@@ -21,16 +22,18 @@ export default function AllOrders() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["all-orders-complete", search, switcher],
+    queryKey: ["all-orders-complete", activeSearch, switcher],
     queryFn: async () => {
       // Fetch first page to get total pages
-      const firstPage = await getAllOrdersWebsite(1, token, 2, search);
+      const firstPage = await getAllOrdersWebsite(1, token, 2, activeSearch);
       const totalPages = firstPage.data.pagination.totalPages;
 
       // Fetch all pages
       const allPagesPromises = [];
       for (let page = 1; page <= totalPages; page++) {
-        allPagesPromises.push(getAllOrdersWebsite(page, token, 2, search));
+        allPagesPromises.push(
+          getAllOrdersWebsite(page, token, 2, activeSearch)
+        );
       }
 
       const allPagesData = await Promise.all(allPagesPromises);
@@ -355,7 +358,6 @@ export default function AllOrders() {
                               (extra) => `
                             <div class="extra-item">
                               <span>+ ${extra.name || "Extra"}</span>
-                              <span>+${formatCurrency(+extra.price || 0)}</span>
                             </div>
                           `
                             )
@@ -476,7 +478,17 @@ export default function AllOrders() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            if (e.target.value === "") {
+              setActiveSearch("");
+            }
+          }}
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              setActiveSearch(search);
+            }
+          }}
           className="px-3 block border-[1px] border-[#FFBC0F] mb-10 py-2 rounded-md focus:outline-none bg-black"
           placeholder="Search here"
         />

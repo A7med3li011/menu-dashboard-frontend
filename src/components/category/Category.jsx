@@ -4,16 +4,39 @@ import CategoryCard from "./CategoryCard";
 import { Plus, Grid3X3, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useState } from "react";
+import { useEffect } from "react";
 
 export default function Category() {
   const navigate = useNavigate();
   const token = useSelector((store) => store.user.token);
+  const [categoryList, setCategoryList] = useState([]);
 
-  const { data: categoryList, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["get-Categotys"],
     queryFn: () => getCategories(token),
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (data) {
+      setCategoryList(data);
+    }
+  }, [data]);
+
+  const handleUpdateList = (updatedCategory) => {
+    setCategoryList((prevList) =>
+      prevList.map((Category) =>
+        Category._id === updatedCategory._id ? updatedCategory : Category
+      )
+    );
+  };
+
+  const handleRemoveCategory = (id) => {
+    setCategoryList((prevList) =>
+      prevList.filter((Category) => Category._id !== id)
+    );
+  };
 
   if (isLoading) {
     return (
@@ -78,10 +101,14 @@ export default function Category() {
             <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {categoryList.map((category, index) => (
                 <div
-                  key={category.id || index}
+                  key={category._id || index}
                   className="transform hover:scale-[1.02] transition-transform duration-300"
                 >
-                  <CategoryCard data={category} />
+                  <CategoryCard
+                    data={category}
+                    onDelete={handleRemoveCategory}
+                    onUpdate={handleUpdateList}
+                  />
                 </div>
               ))}
             </div>

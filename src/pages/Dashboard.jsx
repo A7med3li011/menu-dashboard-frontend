@@ -27,8 +27,6 @@ import { useQuery } from "@tanstack/react-query";
 import { dashboaordmain, ordersMonthly, ordersWeekly } from "../services/apis";
 
 export default function Dashboard() {
-  // Sample data for charts
-
   const { data, isLoading } = useQuery({
     queryKey: ["dash_1"],
     queryFn: dashboaordmain,
@@ -42,7 +40,7 @@ export default function Dashboard() {
     queryFn: ordersMonthly,
   });
 
-  const colors = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#EF4444"];
+  const colors = ["#ffbc0f", "#06B6D4", "#10B981", "#F59E0B", "#EF4444"];
 
   const StatCard = ({ icon: Icon, title, value, change, color = "purple" }) => {
     const colorClasses = {
@@ -52,18 +50,36 @@ export default function Dashboard() {
       amber: "bg-amber-500 text-white",
     };
 
+    // Format the value properly - remove "EG" and handle numbers correctly
+    const formatValue = (val) => {
+      if (typeof val === "string") {
+        // Remove "EG" and any other non-numeric characters except decimal points
+        const cleanValue = val.replace(/[^\d.-]/g, "");
+        const numValue = parseFloat(cleanValue);
+        return isNaN(numValue) ? val : numValue.toLocaleString();
+      }
+      if (typeof val === "number") {
+        return val.toLocaleString();
+      }
+      return val || 0;
+    };
+
     return (
-      <div className="bg-[#FFBC0F] rounded-xl shadow-lg p-6 border border-gray-800 hover:shadow-xl transition-shadow duration-300">
+      <div className="bg-[#111315] rounded-xl shadow-lg p-6 border border-gray-800 hover:border-popular hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-gray-700 text-sm font-medium">{title}</p>
-            <p className="text-3xl font-bold text-white mt-2">{value}</p>
-            <div className="flex items-center mt-2">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-green-500 text-sm font-medium">
-                {change}
-              </span>
-            </div>
+            <p className="text-white text-sm font-medium">{title}</p>
+            <p className="text-3xl font-bold text-white mt-2">
+              {formatValue(value)}
+            </p>
+            {change && (
+              <div className="flex items-center mt-2">
+                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-green-500 text-sm font-medium">
+                  {change}
+                </span>
+              </div>
+            )}
           </div>
           <div className={`p-3 rounded-full ${colorClasses[color]}`}>
             <Icon className="w-6 h-6" />
@@ -91,25 +107,29 @@ export default function Dashboard() {
           <StatCard
             icon={DollarSign}
             title="Total Revenue"
-            value={`${data?.revenue || 0} EG`}
-            color="purple"
+            value={parseFloat(data?.revenue || 0).toFixed(2)}
+            change="+12.5%"
+            color="amber"
           />
           <StatCard
             icon={ShoppingBag}
             title="Orders Today"
             value={data?.todayOrderCount || 0}
-            color="cyan"
+            change="+8.2%"
+            color="amber"
           />
           <StatCard
             icon={Users}
             title="Active Customers"
             value={data?.countOfCustomer || 0}
-            color="emerald"
+            change="+15.3%"
+            color="amber"
           />
           <StatCard
             icon={Star}
             title="All Orders"
-            value={data?.allRodersCount}
+            value={data?.allRodersCount || 0}
+            change="+23.1%"
             color="amber"
           />
         </div>
@@ -117,14 +137,14 @@ export default function Dashboard() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Revenue Chart */}
-          <div className="bg-[#FFBC0F] rounded-xl shadow-lg p-6 border border-gray-800">
+          <div className="bg-[#111315] rounded-xl shadow-lg p-6 border border-gray-800 hover:border-popular transition-all duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">
                 Revenue Overview
               </h2>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Revenue</span>
+                <div className="w-3 h-3 bg-popular rounded-full"></div>
+                <span className="text-sm text-white">Revenue</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={300}>
@@ -132,52 +152,52 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis
                   dataKey="month"
-                  tick={{ fontSize: 12, fill: "#374151" }}
+                  tick={{ fontSize: 12, fill: "#9CA3AF" }}
                 />
-                <YAxis tick={{ fontSize: 12, fill: "#374151" }} />
+                <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#1F2937",
                     border: "1px solid #374151",
                     borderRadius: "8px",
-                    color: "#FFFFFF",
+                    color: "#ffbc0f",
                   }}
                 />
-                <Bar dataKey="revenue" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="revenue" fill="#ffbc0f" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Daily Orders Chart */}
-          <div className="bg-[#FFBC0F] rounded-xl shadow-lg p-6 border border-gray-800">
+          <div className="bg-[#111315] rounded-xl shadow-lg p-6 border border-gray-800 hover:border-popular transition-all duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">
                 Weekly Orders
               </h2>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Orders</span>
+                <div className="w-3 h-3 bg-popular rounded-full"></div>
+                <span className="text-sm text-white">Orders</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={weeklyData || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#374151" }} />
-                <YAxis tick={{ fontSize: 12, fill: "#374151" }} />
+                <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#9CA3AF" }} />
+                <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#1F2937",
                     border: "1px solid #374151",
                     borderRadius: "8px",
-                    color: "#FFFFFF",
+                    color: "#ffbc0f",
                   }}
                 />
                 <Line
                   type="monotone"
                   dataKey="orders"
-                  stroke="#06B6D4"
+                  stroke="#ffbc0f"
                   strokeWidth={3}
-                  dot={{ fill: "#06B6D4", strokeWidth: 2, r: 4 }}
+                  dot={{ fill: "#ffbc0f", strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -187,7 +207,7 @@ export default function Dashboard() {
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Popular Dishes */}
-          <div className="lg:col-span-2 bg-[#FFBC0F] rounded-xl shadow-lg p-6 border border-gray-800">
+          <div className="lg:col-span-2 bg-[#111315] rounded-xl shadow-lg p-6 border border-gray-800 hover:border-popular transition-all duration-300">
             <h2 className="text-xl font-semibold text-white mb-6">
               Popular Dishes
             </h2>
@@ -202,28 +222,31 @@ export default function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {data?.data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index]} />
+                  {data?.data?.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={colors[index % colors.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-4 mt-4">
-              {data?.data.map((dish, index) => (
+              {data?.data?.map((dish, index) => (
                 <div key={index} className="flex items-center space-x-2">
                   <div
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: colors[index] }}
+                    style={{ backgroundColor: colors[index % colors.length] }}
                   ></div>
-                  <span className="text-sm text-gray-600">{dish.name}</span>
+                  <span className="text-sm text-white">{dish.name}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-[#FFBC0F] rounded-xl shadow-lg p-6 border border-gray-800">
+          <div className="bg-[#111315] rounded-xl shadow-lg p-6 border border-gray-800 hover:border-popular transition-all duration-300">
             <h2 className="text-xl font-semibold text-white mb-6">
               Quick Stats
             </h2>
@@ -234,9 +257,9 @@ export default function Dashboard() {
                     <Clock className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-white"># Operators</p>
-                    <p className="text-sm text-gray-600">
-                      {data?.countOperators}
+                    <p className="font-medium text-white">Operators</p>
+                    <p className="text-2xl font-bold text-white">
+                      {data?.countOperators || 0}
                     </p>
                   </div>
                 </div>
@@ -248,8 +271,10 @@ export default function Dashboard() {
                     <ChefHat className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-white"># Chefs</p>
-                    <p className="text-sm text-gray-600">{data?.countStaff}</p>
+                    <p className="font-medium text-white">Chefs</p>
+                    <p className="text-2xl font-bold text-white">
+                      {data?.countStaff || 0}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -261,22 +286,12 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="font-medium text-white">Waiters</p>
-                    <p className="text-sm text-gray-600">{data?.countWaiter}</p>
+                    <p className="text-2xl font-bold text-white">
+                      {data?.countWaiter || 0}
+                    </p>
                   </div>
                 </div>
               </div>
-
-              {/* <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-amber-900 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Growth Rate</p>
-                    <p className="text-sm text-gray-400">+15.3% this month</p>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
         </div>

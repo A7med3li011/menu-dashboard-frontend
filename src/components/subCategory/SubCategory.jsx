@@ -1,18 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCategories, getsubCategoryies } from "../../services/apis";
+import {
+  getCategories,
+  getsubCategoryies,
+  getproductsBysubCat,
+} from "../../services/apis";
 import SubCategoryCard from "./SubCategoryCard";
 import { Plus, Grid3X3, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useState } from "react";
+import { useEffect } from "react";
 
 export default function SubCategory() {
   const navigate = useNavigate();
   const token = useSelector((store) => store.user.token);
-  const { data: subcategoryList, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["get-sub-Categotys"],
     queryFn: () => getsubCategoryies(token),
     refetchOnWindowFocus: false,
   });
+
+  const [subcategoryList, setSubcategoryList] = useState([]);
+
+  useEffect(() => {
+    if (data) {
+      setSubcategoryList(data);
+    }
+  }, [data]);
+
+  const handleUpdateList = (updatedSubCategory) => {
+    setSubcategoryList((prevList) =>
+      prevList.map((subCategory) =>
+        subCategory._id === updatedSubCategory._id
+          ? updatedSubCategory
+          : subCategory
+      )
+    );
+  };
+
+  const handleRemoveSubCategory = (id) => {
+    setSubcategoryList((prevList) =>
+      prevList.filter((subCategory) => subCategory._id !== id)
+    );
+  };
 
   if (isLoading) {
     return (
@@ -60,7 +90,7 @@ export default function SubCategory() {
       </div>
 
       {/* Categories Grid */}
-      <div className="space-y-4">
+      <div className="flex-1 space-y-4">
         {subcategoryList && subcategoryList.length > 0 ? (
           <>
             <div className="flex items-center justify-between">
@@ -78,10 +108,14 @@ export default function SubCategory() {
             <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {subcategoryList?.map((category, index) => (
                 <div
-                  key={category.id || index}
+                  key={category._id || index}
                   className="transform hover:scale-[1.02] transition-transform duration-300"
                 >
-                  <SubCategoryCard data={category} />
+                  <SubCategoryCard
+                    data={category}
+                    onDelete={handleRemoveSubCategory}
+                    onUpdate={handleUpdateList}
+                  />
                 </div>
               ))}
             </div>

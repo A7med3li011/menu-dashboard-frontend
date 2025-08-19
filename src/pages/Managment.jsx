@@ -46,7 +46,7 @@ export default function Managment() {
             <span>
               <TableOfContents size={15} />
             </span>
-            <span>Dishes</span>
+            <span>Product</span>
           </button>
         </div>
       </div>

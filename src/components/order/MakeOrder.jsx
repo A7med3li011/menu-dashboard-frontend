@@ -10,11 +10,21 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { getproducts, imageBase } from "../../services/apis";
+import {
+  getproducts,
+  imageBase,
+  getAllExtras,
+  createExtra,
+  updateExtra,
+  deleteExtra,
+} from "../../services/apis";
 import { useSelector } from "react-redux";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function MakeOrder() {
+  const [creatingExtra, setCreatingExtra] = useState(false);
+  const [apiExtras, setApiExtras] = useState([]);
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
   const [total, setTotal] = useState(0);
@@ -35,6 +45,20 @@ export default function MakeOrder() {
   const [newExtra, setNewExtra] = useState({ name: "", price: "" });
 
   const token = useSelector((store) => store.user.token);
+
+  const fetchExtras = async (productId) => {
+    try {
+      const response = await getAllExtras(productId, token);
+      const transformedExtras = (response.data || []).map((extra) => ({
+        ...extra,
+        id: extra._id,
+      }));
+      setApiExtras(transformedExtras);
+    } catch (error) {
+      console.error("failed to fetch extras:", error);
+      setApiExtras([]);
+    }
+  };
 
   const [customizationOptions, setCustomizationOptions] = useState({
     extras: [
@@ -57,7 +81,17 @@ export default function MakeOrder() {
     queryKey: ["get-all-products"],
     queryFn: async () => {
       const res = await getproducts(token);
-      setFilterOptions([...new Set(res?.map((ele) => ele.subCategory))]);
+      const uniqueSubCategories = (res || [])
+        .filter(
+          (product) =>
+            product && product.subCategory && product.subCategory.title
+        )
+        .map((product) => product.subCategory)
+        .filter(
+          (subCat, index, arr) =>
+            arr.findIndex((sc) => sc.title === subCat.title) === index
+        );
+      setFilterOptions(uniqueSubCategories);
 
       setMydata(res);
     },
@@ -74,10 +108,12 @@ export default function MakeOrder() {
   };
 
   // Open customization modal
-  const openCustomization = (product) => {
+  const openCustomization = async (product) => {
     setSelectedProduct(product);
     resetCustomizations();
     setShowCustomization(true);
+
+    await fetchExtras(product._id);
   };
 
   // Close customization modal
@@ -112,9 +148,9 @@ export default function MakeOrder() {
         <div className="flex items-center flex-1">
           <input
             type="checkbox"
-            checked={customizations.extras.includes(extra.id)}
+            checked={customizations.extras.includes(extra._id)}
             onChange={(e) =>
-              handleCustomizationChange("extras", extra.id, e.target.checked)
+              handleCustomizationChange("extras", extra._id, e.target.checked)
             }
             className="mr-3"
           />
@@ -138,7 +174,7 @@ export default function MakeOrder() {
         </div>
         <div className="flex items-center gap-1 ml-2">
           <button
-            onClick={() => handleEditingExtra(extra.id, name, price)}
+            onClick={() => handleEditingExtra(extra._id, name, price)}
             className="text-blue-600 hover:text-blue-800 p-1"
             disabled={!name.trim() || !price}
           >
@@ -163,7 +199,7 @@ export default function MakeOrder() {
 
     // Add extras price
     customizations.extras.forEach((extraId) => {
-      const extra = customizationOptions.extras.find((e) => e.id === extraId);
+      const extra = apiExtras.find((e) => e._id === extraId);
       if (extra) price += extra.price;
     });
 
@@ -171,47 +207,115 @@ export default function MakeOrder() {
   };
 
   // handle Add Extras
-  const handleAddExtra = () => {
-    if (newExtra.name.trim() && newExtra.price) {
-      const id =
-        Math.max(...customizationOptions.extras.map((e) => e.id), 0) + 1;
-      setCustomizationOptions((prev) => ({
-        ...prev,
-        extras: [
-          ...prev.extras,
-          { id, name: newExtra.name, price: parseFloat(newExtra.price) },
-        ],
-      }));
+  const handleAddExtra = async () => {
+    if (!newExtra.name.trim() || !newExtra.price) {
+      return;
+    }
+    try {
+      setCreatingExtra(true);
+
+      const response = await createExtra(
+        selectedProduct._id,
+        {
+          title: newExtra.name.trim(),
+          price: parseFloat(newExtra.price),
+        },
+        token
+      );
+
+      const newExtraData = {
+        _id: response.data._id,
+        name: response.data.name || response.data.title, // ✅ Correct
+        price: response.data.price, // ✅ Correct
+      };
+
+      setApiExtras((prev) => [...prev, newExtraData]);
+
       setNewExtra({ name: "", price: "" });
       setShowAddForm(false);
+      toast.success("Extra added successfully!");
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to create extra. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setCreatingExtra(false);
     }
   };
 
   // handle Edit Extras
-  const handleEditingExtra = (id, newName, newPrice) => {
-    setCustomizationOptions((prev) => ({
-      ...prev,
-      extras: prev.extras.map((extra) =>
-        extra.id == id
-          ? { ...extra, name: newName, price: parseFloat(newPrice) }
-          : extra
-      ),
-    }));
-    setEditingExtra(null);
+  const handleEditingExtra = async (extraId, newName, newPrice) => {
+    if (!selectedProduct) return;
+    try {
+      setCreatingExtra(true);
+      const response = await updateExtra(
+        selectedProduct._id,
+        extraId,
+        {
+          title: newName.trim(),
+          price: parseFloat(newPrice),
+        },
+        token
+      );
+
+      setApiExtras((prev) =>
+        prev.map((extra) =>
+          extra._id === extraId
+            ? {
+                ...extra,
+                _id: extra._id,
+                name: response.data.title || response.data.name,
+                price: response.data.price,
+              }
+            : extra
+        )
+      );
+
+      setEditingExtra(null);
+      toast.success("Extra updated successfully!");
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to update extra. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setCreatingExtra(false);
+    }
   };
 
   // handle Delete Extras
-  const handleDeleteExtra = (id) => {
-    setCustomizationOptions((prev) => ({
-      ...prev,
-      extras: prev.extras.filter((extra) => extra.id != id),
-    }));
+  const handleDeleteExtra = async (extraId) => {
+    if (!selectedProduct) return;
 
-    // Remove from customizations if it was selected
-    setCustomizations((prev) => ({
-      ...prev,
-      extras: prev.extras.filter((extraId) => extraId != id),
-    }));
+    if (!window.confirm("Are you sure you want to delete this extra?")) {
+      return;
+    }
+
+    try {
+      setCreatingExtra(true); // Reuse loading state
+
+      await deleteExtra(selectedProduct._id, extraId, token);
+
+      setApiExtras((prev) => prev.filter((extra) => extra._id !== extraId));
+
+      setCustomizations((prev) => ({
+        ...prev,
+        extras: prev.extras.filter(
+          (selectedExtraId) => selectedExtraId !== extraId
+        ),
+      }));
+
+      toast.success("Extra deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete extra:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to delete extra. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setCreatingExtra(false);
+    }
   };
 
   // Add to cart with customizations
@@ -223,7 +327,7 @@ export default function MakeOrder() {
 
     // Get detailed extras with prices
     const extrasWithPrices = customizations.extras.map((extraId) => {
-      const extra = customizationOptions.extras.find((e) => e.id === extraId);
+      const extra = apiExtras.find((e) => e._id === extraId);
       return {
         id: extra.id,
         name: extra.name,
@@ -334,7 +438,8 @@ export default function MakeOrder() {
 
   if (filterValue) {
     allData = myData.filter(
-      (ele) => ele.subCategory.title == filterValue.title
+      (ele) =>
+        ele && ele.subCategory && ele.subCategory.title === filterValue.title
     );
   } else {
     allData = myData;
@@ -401,8 +506,7 @@ export default function MakeOrder() {
                   src={`${imageBase}${ele?.image}`}
                   alt={ele?.title || "Category"}
                   onError={(e) => {
-                    e.target.src =
-                      "https://via.placeholder.com/120x120/purple/white?text=Category";
+                    e.target.src = "";
                   }}
                 />
                 <p className="text-center text-xs sm:text-sm font-medium text-white mt-2 truncate max-w-[80px] sm:max-w-[100px] lg:max-w-[120px]">
@@ -417,44 +521,48 @@ export default function MakeOrder() {
             {allData?.map((product) => (
               <div
                 key={product._id}
-                className="bg-secondary rounded-xl lg:rounded-2xl my-2 lg:my-3 pb-4 lg:pb-6 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-transparent hover:border-popular group"
+                className="bg-secondary rounded-xl lg:rounded-2xl my-2 lg:my-3 pb-4 lg:pb-6 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-transparent hover:border-popular group min-h-[300px] sm:min-h-[320px] lg:min-h-[340px]"
               >
-                <div className="flex flex-col items-center text-center">
+                <div className="flex flex-col items-center text-center h-full">
                   <div className="w-full h-[120px] sm:h-[140px] lg:h-[150px] overflow-hidden mb-3 lg:mb-4 transition-transform duration-300">
                     <img
                       className="w-full h-full object-cover rounded-lg lg:rounded-xl rounded-b-none"
                       src={`${imageBase}/${product?.image}`}
                       alt={product?.title}
                       onError={(e) => {
-                        e.target.src =
-                          "https://via.placeholder.com/150x150/purple/white?text=No+Image";
+                        e.target.src = "";
                       }}
                     />
                   </div>
-                  <h3 className="font-bold text-white mb-2 text-xs sm:text-sm leading-tight px-2">
-                    {product?.title}
-                  </h3>
 
-                  <div className="text-xs sm:text-sm font-bold text-popular mb-3 lg:mb-4">
-                    {product.price?.toFixed(2) || "0.00"} EG
-                  </div>
+                  {/* Title with fixed height container */}
+                  <div className="flex-grow flex flex-col justify-between w-full px-2">
+                    <div>
+                      <h3 className="font-bold text-white mb-2 text-xs sm:text-sm leading-tight min-h-[2.5rem] flex items-center justify-center">
+                        {product?.title}
+                      </h3>
+                      <div className="text-xs sm:text-sm font-bold text-popular mb-3 lg:mb-4">
+                        {product.price?.toFixed(2) || "0.00"} EG
+                      </div>
+                    </div>
 
-                  {/* Action buttons */}
-                  <div className="flex flex-col gap-2 px-2 w-full">
-                    <button
-                      onClick={() => addToCart(product)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 w-full"
-                    >
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                      Quick Add
-                    </button>
-                    <button
-                      onClick={() => openCustomization(product)}
-                      className="bg-popular hover:bg-popular/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 w-full"
-                    >
-                      <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                      Customize
-                    </button>
+                    {/* Action buttons - always at bottom */}
+                    <div className="flex flex-col gap-2 w-full mt-auto">
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 w-full"
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        Quick Add
+                      </button>
+                      <button
+                        onClick={() => openCustomization(product)}
+                        className="bg-popular hover:bg-popular/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 w-full"
+                      >
+                        <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                        Customize
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -463,7 +571,7 @@ export default function MakeOrder() {
         </div>
 
         {/* Order Summary Section - Desktop - IMPROVED */}
-        <div className="hidden xl:block w-full lg:w-96 xl:w-[420px] 2xl:w-[480px] bg-secondary text-white backdrop-blur-sm rounded-3xl p-6 lg:p-8 shadow-2xl">
+        <div className="hidden xl:block w-full lg:w-96 xl:w-[320px] 2xl:w-[480px] bg-secondary text-white backdrop-blur-sm rounded-3xl p-6 lg:p-8 shadow-2xl">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-lg font-bold flex items-center gap-3">
               <ShoppingCart className="w-6 h-6 xl:w-7 xl:h-7" />
@@ -623,28 +731,10 @@ export default function MakeOrder() {
           {cart.length > 0 && (
             <div className="border-t border-gray-600 pt-6">
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm xl:text-base font-medium">
-                    Subtotal:
-                  </span>
-                  <span className="text-base xl:text-lg font-semibold text-popular">
-                    {total.toFixed(2)} EG
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm xl:text-base font-medium">
-                    VAT (20%):
-                  </span>
-                  <span className="text-base xl:text-lg font-semibold text-popular">
-                    {(total * 0.2).toFixed(2)} EG
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center pt-3 border-t border-gray-600">
+                <div className="flex justify-between items-center pt-3 border-gray-600">
                   <span className="text-base xl:text-lg font-bold">Total:</span>
                   <span className="text-lg xl:text-xl font-bold text-popular">
-                    {(total + total * 0.2).toFixed(2)} EG
+                    {total.toFixed(2)} EG
                   </span>
                 </div>
               </div>
@@ -837,15 +927,10 @@ export default function MakeOrder() {
                     {total.toFixed(2)} EG
                   </span>
                 </div>
-
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm font-bold">Vat:</span>
-                  <span className="text-md font-bold text-popular">20%</span>
-                </div>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-bold">Total After Vat:</span>
                   <span className="text-md font-bold text-popular">
-                    {(total + total * 0.2).toFixed(2)} EG
+                    {total.toFixed(2)} EG
                   </span>
                 </div>
 
@@ -899,13 +984,16 @@ export default function MakeOrder() {
                   <h4 className="font-semibold text-gray-800 mb-3">
                     Add Extras
                   </h4>
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="bg-popular hover:bg-popular/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1"
-                  >
-                    <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                    Custom
-                  </button>
+                  {selectedProduct && (
+                    <button
+                      onClick={() => setShowAddForm(true)}
+                      className="bg-popular hover:bg-popular/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                      disabled={creatingExtra}
+                    >
+                      <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                      Add Custom Extra
+                    </button>
+                  )}
                 </div>
                 <div className="space-y-2">
                   {showAddForm && (
@@ -945,9 +1033,17 @@ export default function MakeOrder() {
                         <button
                           onClick={handleAddExtra}
                           className="text-blue-600 hover:text-blue-800 p-1"
-                          disabled={!newExtra.name.trim() || !newExtra.price}
+                          disabled={
+                            !newExtra.name.trim() ||
+                            !newExtra.price ||
+                            creatingExtra
+                          }
                         >
-                          <Check className="w-4 h-4" />
+                          {creatingExtra ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
                         </button>
                         <button
                           onClick={() => {
@@ -961,20 +1057,22 @@ export default function MakeOrder() {
                       </div>
                     </div>
                   )}
-                  {customizationOptions.extras.map((extra) => (
-                    <div key={extra.id}>
-                      {editingExtra === extra.id ? (
+                  {apiExtras.map((extra) => (
+                    <div key={extra._id}>
+                      {editingExtra === extra._id ? (
                         <EditForm extra={extra} />
                       ) : (
                         <label className="flex items-center text-gray-800 justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
-                              checked={customizations.extras.includes(extra.id)}
+                              checked={customizations.extras.includes(
+                                extra._id
+                              )}
                               onChange={(e) =>
                                 handleCustomizationChange(
                                   "extras",
-                                  extra.id,
+                                  extra._id,
                                   e.target.checked
                                 )
                               }
@@ -991,7 +1089,7 @@ export default function MakeOrder() {
                                 className="text-blue-600 hover:text-blue-800 p-1"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  setEditingExtra(extra.id);
+                                  setEditingExtra(extra._id);
                                 }}
                               >
                                 <Edit2 className="w-3 h-3" />
@@ -1000,12 +1098,8 @@ export default function MakeOrder() {
                                 className="text-red-600 hover:text-red-800 p-1"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  if (
-                                    window.confirm(
-                                      "Are you sure you want to remove this extra?"
-                                    )
-                                  ) {
-                                    handleDeleteExtra(extra.id);
+                                  {
+                                    handleDeleteExtra(extra._id);
                                   }
                                 }}
                               >

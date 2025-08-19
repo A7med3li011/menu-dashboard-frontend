@@ -3,6 +3,7 @@ import dashboardicon from "../assets/dashboard-fill.png";
 import peopleIcon from "../assets/people-fill.png";
 // import menuIcom from "../assets/files.png";
 // import inventoryIcon from "../assets/inevntory.png";
+import offerIcon from "../assets/discount.png";
 import reportIcon from "../assets/sheet.png";
 import tablesIcon from "../assets/icons8-order-food-100.png";
 import reservationIcon from "../assets/calendare.png";
@@ -69,6 +70,12 @@ export default function SideBar() {
       title: "Kitchen",
       icon: kitchenIcon,
       link: "/kitchen",
+      access: ["admin", "staff", "operation"],
+    },
+    {
+      title: "offer",
+      icon: offerIcon,
+      link: "/offer",
       access: ["admin", "staff", "operation"],
     },
   ];

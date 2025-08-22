@@ -548,7 +548,14 @@ export default function DishAdd() {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex justify-end gap-4 pt-6">
+            <div className="flex justify-start gap-4 pt-6">
+              <button
+                type="submit"
+                disabled={isSubmitting || !formik.isValid || !formik.dirty}
+                className="bg-popular text-white px-8 py-3 rounded-md font-semibold hover:bg-popular/80 focus:outline-none focus:ring-2 focus:ring-popular focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? "Adding Dish..." : "Add Dish"}
+              </button>
               <button
                 type="button"
                 onClick={handleReset}
@@ -556,13 +563,6 @@ export default function DishAdd() {
                 className="bg-gray-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Reset
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting || !formik.isValid || !formik.dirty}
-                className="bg-popular text-white px-8 py-3 rounded-md font-semibold hover:bg-popular/80 focus:outline-none focus:ring-2 focus:ring-popular focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSubmitting ? "Adding Dish..." : "Add Dish"}
               </button>
             </div>
           </form>

@@ -23,12 +23,14 @@ const ViewCategoryDetails = () => {
     }
   }, [token, navigate]);
 
+  // 1. Fetch Category
   const { data: categoryData, isLoading: categoryLoading } = useQuery({
     queryKey: ["category", categoryId],
     queryFn: () => getCategory(categoryId, token),
     enabled: !!categoryId && !!token,
   });
 
+  // 2. Fetch Subcategories
   const { data: subCategoriesData, isLoading: subCategoriesLoading } = useQuery(
     {
       queryKey: ["subcategories", categoryId],
@@ -37,9 +39,11 @@ const ViewCategoryDetails = () => {
     }
   );
 
+  // --- DATA EXTRACTION ---
   const category = categoryData?.data || categoryData;
-  const subCategories = subCategoriesData?.data || [];
+  const subCategories = subCategoriesData || [];
 
+  // 3. Fetch Products
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products", categoryId, subCategories.map((s) => s._id)],
     queryFn: async () => {
@@ -68,6 +72,7 @@ const ViewCategoryDetails = () => {
   return (
     <div className="min-h-screen bg-primary p-6">
       <div className="max-w-7xl mx-auto">
+        {/* --- Header --- */}
         <div className="bg-secondary rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <button
@@ -80,10 +85,12 @@ const ViewCategoryDetails = () => {
             <h1 className="text-3xl font-bold text-white text-center flex-1">
               {category?.title || "Category Details"}
             </h1>
-            <div className="w-16"></div>
+            <div className="w-16"></div> {/* Spacer */}
           </div>
 
+          {/* --- Category and Subcategory Info --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Category Card */}
             <div className="bg-popular/10 rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <Tag className="w-5 h-5 text-blue-400 mr-2" />
@@ -106,6 +113,7 @@ const ViewCategoryDetails = () => {
               </div>
             </div>
 
+            {/* Subcategories List */}
             <div className="bg-popular/10 rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <Layers className="w-5 h-5 text-popular mr-2" />
@@ -133,6 +141,7 @@ const ViewCategoryDetails = () => {
           </div>
         </div>
 
+        {/* --- Products Grid --- */}
         <h2 className="text-2xl font-bold text-white mb-6">
           Products in this Category ({products.length})
         </h2>
@@ -152,12 +161,16 @@ const ViewCategoryDetails = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* ================================================================== */}
+            {/* --- START: Product Card JSX --- */}
+            {/* ================================================================== */}
             {products.map((product) => (
               <div
                 key={product._id}
                 className="bg-secondary rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
               >
-                <div className="relative h-48 bg-gray-300">
+                {/* Product Image */}
+                <div className="relative h-48 bg-gray-700">
                   {product.image ? (
                     <img
                       src={`${imageBase}${product.image}`}
@@ -169,129 +182,95 @@ const ViewCategoryDetails = () => {
                       <ChefHat className="w-12 h-12 text-white" />
                     </div>
                   )}
-                  <div className="absolute top-3 left-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        product.available
-                          ? "bg-popular text-white"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {product.available ? "Available" : "Unavailable"}
-                    </span>
+                  <div
+                    className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium text-white ${
+                      product.available ? "bg-popular" : "bg-red-500"
+                    }`}
+                  >
+                    {product.available ? "Available" : "Unavailable"}
                   </div>
                 </div>
 
+                {/* Product Details */}
                 <div className="p-4 flex flex-col flex-grow">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-2 truncate">
-                      {product.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm mb-3 line-clamp-2">
-                      {product.description}
-                    </p>
-                    {product.kitchen && (
-                      <div className="flex items-center text-white text-sm mb-3">
-                        <ChefHat className="w-4 h-4 mr-1" />
-                        <span>{product.kitchen.name}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center text-popular font-semibold">
-                        <Coins className="w-4 h-4 mr-1" />
-                        <span>{product.price} EG</span>
-                      </div>
+                  <h3 className="text-lg font-semibold text-white mb-2 truncate">
+                    {product.title}
+                  </h3>
+
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
+                    {product.description}
+                  </p>
+
+                  {/* Kitchen Info */}
+                  {product.kitchen?.name && (
+                    <div className="flex items-center text-gray-300 text-sm mb-3">
+                      <ChefHat className="w-4 h-4 mr-2 text-popular" />
+                      <span>{product.kitchen.name}</span>
                     </div>
+                  )}
+
+                  {/* Price */}
+                  <div className="flex items-center text-popular font-semibold text-lg mb-4">
+                    <Coins className="w-5 h-5 mr-2" />
+                    <span>{product.price} EG</span>
                   </div>
 
-                  <div className="mt-auto">
-                    {product.ingredients && product.ingredients.length > 0 && (
-                      <div className="mb-3">
-                        <h4 className="text-white text-sm font-medium mb-1">
-                          Ingredients:
-                        </h4>
-                        <div className="flex flex-wrap gap-1">
-                          {product.ingredients
-                            .slice(0, 3)
-                            .map((ingredient, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 bg-popular/10 text-popular text-xs rounded-full"
-                              >
-                                {ingredient}
-                              </span>
-                            ))}
-                          {product.ingredients.length > 3 && (
-                            <span className="px-2 py-1 bg-popular/10 text-gray-300 text-xs rounded-full">
-                              +{product.ingredients.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {product.extras && product.extras.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="text-white text-sm font-medium mb-1">
-                          Extras:
-                        </h4>
-                        <div className="space-y-1">
-                          {product.extras.slice(0, 2).map((extra) => (
-                            <div
-                              key={extra._id}
-                              className="flex justify-between text-xs"
-                            >
-                              <span className="text-gray-300">
-                                {extra.name}
-                              </span>
-                              <span className="text-popular">
-                                +{extra.price} EG
-                              </span>
-                            </div>
-                          ))}
-                          {product.extras.length > 2 && (
-                            <div className="text-xs text-gray-400">
-                              +{product.extras.length - 2} more extras
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="border-t border-gray-600 pt-3">
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="text-gray-400">
-                          <span className="font-medium">Status:</span>
+                  {/* Ingredients */}
+                  {product.ingredients && product.ingredients.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-white text-sm font-medium mb-2">
+                        Ingredients:
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {product.ingredients.slice(0, 3).map((ing, i) => (
                           <span
-                            className={`ml-1 ${
-                              product.available
-                                ? "text-popular"
-                                : "text-red-400"
-                            }`}
+                            key={i}
+                            className="px-2 py-1 bg-popular/10 text-popular text-xs rounded-full"
                           >
-                            {product.available ? "Available" : "Unavailable"}
+                            {ing}
                           </span>
-                        </div>
-                        <div className="text-gray-400">
-                          <span className="font-medium">Price:</span>
-                          <span className="ml-1 text-popular">
-                            {product.price} EG
+                        ))}
+                        {product.ingredients.length > 6 && (
+                          <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded-full">
+                            +{product.ingredients.length - 3} more
                           </span>
-                        </div>
-                        {product.ingredients && (
-                          <div className="text-gray-400 col-span-2">
-                            <span className="font-medium">Ingredients:</span>
-                            <span className="ml-1">
-                              {product.ingredients.length}
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Extras */}
+                  {product.extras && product.extras.length > 0 && (
+                    <div className="border-t border-gray-700 pt-3 mt-3">
+                      <h4 className="text-white text-sm font-medium mb-2">
+                        Extras:
+                      </h4>
+                      <div className="space-y-1">
+                        {product.extras.slice(0, 2).map((extra) => (
+                          <div
+                            key={extra._id}
+                            className="flex justify-between text-xs"
+                          >
+                            <span className="text-gray-300">{extra.name}</span>
+                            <span className="text-popular">
+                              +{extra.price} EG
                             </span>
+                          </div>
+                        ))}
+                        {product.extras.length > 2 && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            +{product.extras.length - 2} more...
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             ))}
+            {/* ================================================================== */}
+            {/* --- END: Product Card JSX --- */}
+            {/* ================================================================== */}
           </div>
         )}
       </div>

@@ -295,7 +295,7 @@ export default function SubCategoryAdd() {
                       onClick={() => handleReset(resetForm)}
                       disabled={isSubmitting}
                     >
-                      Cancel
+                      Reset
                     </button>
                   </div>
                 </Form>

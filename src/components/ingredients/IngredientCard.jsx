@@ -10,30 +10,16 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
-import { imageBase, deleteProduct } from "../../services/apis";
+import { imageBase, deleteIngredient } from "../../services/apis";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom"; // Add this import
 import { toast } from "react-toastify";
 
-export default function DishCard({ data, onDelete }) {
+export default function IngredientCard({ data, onDelete }) {
   const token = useSelector((store) => store.user.token);
   const navigate = useNavigate(); // Add this hook
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Parse ingredients if it's a string
-  const parseIngredients = (ingredients) => {
-    if (!ingredients || !ingredients.length) return [];
-    try {
-      return JSON.parse(ingredients[0]);
-    } catch {
-      return ingredients;
-    }
-  };
-
-  const ingredientsList = parseIngredients(data?.ingredients);
-  const displayIngredients = ingredientsList; // Show first 3 ingredients
-  const hasMoreIngredients = ingredientsList.length > 6;
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
@@ -41,7 +27,7 @@ export default function DishCard({ data, onDelete }) {
 
   const handleEditClick = () => {
     // Navigate to edit page with product ID
-    navigate(`/product/${data?._id || data?.id}`);
+    navigate(`/ingredients/${data?._id || data?.id}`);
   };
 
   const handleConfirmDelete = async () => {
@@ -50,10 +36,10 @@ export default function DishCard({ data, onDelete }) {
       onDelete(data?.id || data?._id);
     }
     try {
-      await deleteProduct(data?._id, token);
-      toast.success("Product deleted successfully");
+      await deleteIngredient(data?._id, token);
+      toast.success("Ingredient deleted successfully");
     } catch (error) {
-      toast.error("Error deleting product:", error);
+      toast.error("Error deleting ingredient:", error);
     }
     setIsDeleting(false);
     setShowDeleteConfirm(false);
@@ -71,54 +57,29 @@ export default function DishCard({ data, onDelete }) {
           <img
             className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
             src={`${imageBase}${data?.image}`}
-            alt={data?.title}
+            alt={data?.name}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent group-hover:from-black/60 transition-all duration-300"></div>
 
           {/* Price Badge */}
           <div className="absolute top-3 right-3 bg-popular/90 backdrop-blur-sm text-white px-3 py-1 rounded-full font-bold text-sm">
-            {data?.price} {"EG"}
-          </div>
-
-          {/* Rating Badge (if you have rating data) */}
-          <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span>4.5</span>
-          </div>
-
-          {/* Category Tag */}
-          <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-medium">
-            {data?.subCategory?.title}
+            {data?.price}
+            {" EG"}
           </div>
         </div>
 
         {/* Content Container */}
         <div className="p-5 space-y-4 flex-1 flex flex-col">
-          <div className=" h-[100px]">
+          <div className=" h-[75px]">
             <h3 className="text-xl font-bold text-white group-hover:text-popular transition-colors duration-300 leading-tight mb-2">
-              {data?.title}
+              {data?.name}
             </h3>
             <p className="text-gray-300 text-sm line-clamp-2">
               {data?.description}
             </p>
           </div>
 
-          <div className="space-y-3  h-[250px]">
-            {/* Kitchen Info */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
-                <ChefHat className="w-4 h-4 text-popular" />
-              </div>
-              <div className="flex-1">
-                <span className="text-gray-300 text-sm font-medium">
-                  Kitchen
-                </span>
-                <p className="text-white font-semibold">
-                  {data?.kitchen?.name}
-                </p>
-              </div>
-            </div>
-
+          <div className="space-y-3 h-[60px]">
             {/* Category */}
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
@@ -128,35 +89,9 @@ export default function DishCard({ data, onDelete }) {
                 <span className="text-gray-300 text-sm font-medium">
                   Category
                 </span>
-                <p className="text-white font-semibold">
-                  {data?.category?.title}
-                </p>
+                <p className="text-white font-semibold">{data?.category}</p>
               </div>
             </div>
-
-            {/* Ingredients Preview */}
-            {displayIngredients.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-gray-300 text-sm font-medium">
-                  Main Ingredients
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {displayIngredients.map((ingredient, index) => (
-                    <span
-                      key={index}
-                      className="bg-popular/10 text-popular px-2 py-1 rounded-full text-xs font-medium border border-popular/20"
-                    >
-                      {ingredient}
-                    </span>
-                  ))}
-                  {hasMoreIngredients && (
-                    <span className="bg-gray-600/20 text-gray-300 px-2 py-1 rounded-full text-xs font-medium">
-                      +{ingredientsList.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Action Buttons */}
@@ -205,7 +140,7 @@ export default function DishCard({ data, onDelete }) {
                   <AlertTriangle className="w-5 h-5 text-red-500" />
                 </div>
                 <h3 className="text-lg font-semibold text-white">
-                  Delete Product
+                  Delete Ingredient
                 </h3>
               </div>
               <button
@@ -219,7 +154,7 @@ export default function DishCard({ data, onDelete }) {
             {/* Modal Content */}
             <div className="mb-6">
               <p className="text-gray-300 mb-2">
-                Are you sure you want to delete this product?
+                Are you sure you want to delete this ingredient?
               </p>
               <p className="text-white font-medium mb-2">{data?.title}</p>
               <p className="text-red-400 text-sm">

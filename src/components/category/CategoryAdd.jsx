@@ -231,14 +231,14 @@ export default function CategoryAdd() {
                       Add Category
                     </button>
                     <button
-                      className="bg-black py-2 px-3 rounded-md font-semibold w-full sm:w-fit  "
+                      className="bg-gray-500 py-2 px-3 rounded-md font-semibold w-full sm:w-fit  "
                       type="button"
                       onClick={() => {
                         setImagePreview(null);
                         // Reset form if using Formik's resetForm
                       }}
                     >
-                      Cancel
+                      Reset
                     </button>
                   </div>
                 </Form>

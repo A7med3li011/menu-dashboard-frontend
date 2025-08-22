@@ -29,6 +29,10 @@ import EditProduct from "./components/dishes/EditProduct";
 import EditSubCategory from "./components/subCategory/EditSubCategory";
 import Offer from "./pages/Offer";
 import ViewSubCategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
+import IngredientAdd from "./components/ingredients/IngredientAdd";
+import EditIngredient from "./components/ingredients/EditIngredient";
+import EditCategory from "./components/category/EditCategory";
+import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
 function App() {
   const router = createBrowserRouter([
@@ -53,6 +57,14 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "operation"]}>
               <Dashboard />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/add-ingredient",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <IngredientAdd />
             </RoleBasedRoute>
           ),
         },
@@ -89,10 +101,34 @@ function App() {
           ),
         },
         {
+          path: "/ingredients/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <EditIngredient />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/category/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <EditCategory />
+            </RoleBasedRoute>
+          ),
+        },
+        {
           path: "/subcategoryDetails/:id",
           element: (
             <RoleBasedRoute allowedRoles={["admin", "operation"]}>
               <ViewSubCategoryDetails />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/categoryDetails/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+              <ViewCategoryDetails />
             </RoleBasedRoute>
           ),
         },

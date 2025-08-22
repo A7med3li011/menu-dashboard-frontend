@@ -1,25 +1,38 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { getCategory, imageBase, updateCategory } from "../../services/apis";
+import {
+  getIngredient,
+  updateIngredient,
+  imageBase,
+} from "../../services/apis";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Upload, X } from "lucide-react";
-import Category from "./Category";
 
 // FIXED: Updated schema for subcategory validation
-const createCategorySchema = (isEdit, hasExistingImage) =>
+const createIngredientSchema = (isEdit, hasExistingImage) =>
   Yup.object({
-    title: Yup.string()
-      .required("Subcategory title is required")
-      .min(3, "title must be at least 3 characters")
-      .max(100, "title must not exceed 100 characters"),
-
+    name: Yup.string()
+      .required("Subcategory name is required")
+      .min(3, "name must be at least 3 characters")
+      .max(100, "name must not exceed 100 characters"),
+    category: Yup.string().required("Category is required"),
+    description: Yup.string()
+      .required("Description is required")
+      .min(10, "Description must be at least 10 characters")
+      .max(500, "Description must not exceed 500 characters")
+      .trim(),
+    price: Yup.number()
+      .required("Price is required")
+      .positive("Price must be positive")
+      .min(0.01, "Price must be at least 0.01")
+      .max(9999.99, "Price cannot exceed 9999.99"),
     image: Yup.mixed().test(
       "image-required",
-      "Category image is required",
+      "Subcategory image is required",
       function (value) {
         // For create mode, always require image
         if (!isEdit) {
@@ -40,13 +53,14 @@ const createCategorySchema = (isEdit, hasExistingImage) =>
     ),
   });
 
-export default function EditCategory() {
+export default function EditIngredient() {
   const [imagePreview, setImagePreview] = useState(null);
   const [hasNewImage, setHasNewImage] = useState(false);
   const [originalImageUrl, setOriginalImageUrl] = useState(null);
   const [hasExistingImage, setHasExistingImage] = useState(false);
   const [existingImagePath, setExistingImagePath] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [validationSchema, setValidationSchema] = useState(null);
   const { id } = useParams();
   const token = useSelector((store) => store.user.token);
@@ -66,6 +80,7 @@ export default function EditCategory() {
       // If your token is JWT, you can decode and check expiration
       const tokenParts = token.split(".");
       if (tokenParts.length !== 3) {
+        console.log("Token parts count:", tokenParts.length);
         throw new Error("Invalid token format - expected JWT with 3 parts");
       }
 
@@ -80,7 +95,10 @@ export default function EditCategory() {
           throw new Error("Token has expired");
         }
       }
+
+      console.log("Token validation successful");
     } catch (error) {
+      console.error("Token validation error:", error);
       toast.error(
         `Invalid authentication token: ${error.message}. Please login again.`
       );
@@ -90,30 +108,45 @@ export default function EditCategory() {
 
   // FIXED: Initialize validation schema with proper dependencies
   useEffect(() => {
-    const schema = createCategorySchema(isEdit, hasExistingImage);
+    const schema = createIngredientSchema(isEdit, hasExistingImage);
     setValidationSchema(schema);
+    console.log(
+      "Validation schema updated - isEdit:",
+      isEdit,
+      "hasExistingImage:",
+      hasExistingImage
+    );
   }, [isEdit, hasExistingImage]);
 
   // Fetch product data for editing
   const {
-    data: CategoryData,
-    isLoading: categoryLoading,
+    data: IngredientData,
+    isLoading: ingredientLoading,
     error,
   } = useQuery({
-    queryKey: ["category", id],
-    queryFn: () => getCategory(id, token),
+    queryKey: ["product", id],
+    queryFn: () => getIngredient(id, token),
     enabled: isEdit && !!id,
     onSuccess: (data) => {
-      console.log("Category fetched successfully:", data);
+      console.log("Ingredient fetched successfully:", data);
     },
     onError: (error) => {
-      console.error("Category fetching:", error);
+      console.error("Error fetching ingredient:", error);
     },
   });
 
+  const handleCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    setSelectedCategory(categoryId);
+    formik.setFieldValue("category", categoryId);
+  };
+
   const formik = useFormik({
     initialValues: {
-      title: "",
+      name: "",
+      category: "",
+      price: "",
+      descrption: "",
       image: null,
     },
     validationSchema: validationSchema,
@@ -128,10 +161,12 @@ export default function EditCategory() {
         if (key === "image") {
           // Only append image if a new one was selected and it's a valid File object
           if (hasNewImage && values[key] && values[key] instanceof File) {
+            console.log("Appending new image file:", values[key].name);
             formData.append(key, values[key]);
           }
           // If keeping existing image, append the path
           else if (!hasNewImage && existingImagePath) {
+            console.log("Keeping existing image:", existingImagePath);
             formData.append("imagePath", existingImagePath);
           }
         } else {
@@ -139,6 +174,8 @@ export default function EditCategory() {
         }
       });
 
+      // Debug: Log FormData contents safely
+      console.log("FormData contents:");
       for (let pair of formData.entries()) {
         if (pair[0] === "image" || pair[0] === "imagePath") {
           const file = pair[1];
@@ -157,26 +194,32 @@ export default function EditCategory() {
   });
 
   useEffect(() => {
-    if (CategoryData && isEdit) {
+    if (IngredientData && isEdit) {
       try {
-        const categoryObj = CategoryData.data || categoryObj;
+        const Ingredient = IngredientData.data || Ingredient;
 
         // Handle existing image with proper error handling
         let imageExists = false;
         let imagePath = null;
 
-        if (categoryObj.image && typeof categoryObj.image === "object") {
+        if (Ingredient.image && typeof Ingredient.image === "object") {
           // Handle case where image is an object with filename property
-          if (categoryObj.image.filename) {
+          if (Ingredient.image.filename) {
+            console.log(
+              "Setting up existing image:",
+              Ingredient.image.filename
+            );
             imageExists = true;
-            imagePath = categoryObj.image.filename;
+            imagePath = Ingredient.image.filename;
           }
         } else if (
-          typeof categoryObj.image === "string" &&
-          categoryObj.image.trim() !== ""
+          typeof Ingredient.image === "string" &&
+          Ingredient.image.trim() !== ""
         ) {
+          // Handle case where image is just a string path
+          console.log("Setting up existing image:", Ingredient.image);
           imageExists = true;
-          imagePath = categoryObj.image;
+          imagePath = Ingredient.image;
         }
 
         if (imageExists && imagePath) {
@@ -189,10 +232,14 @@ export default function EditCategory() {
 
           // Set form values with proper existing image handling
           formik.setValues({
-            title: categoryObj.title || "",
+            name: Ingredient.name || "",
+            price: Ingredient.price || "",
+            description: Ingredient.description || "",
+            category: Ingredient.category || "",
             image: "EXISTING_IMAGE_PLACEHOLDER", // Use placeholder for existing images
           });
         } else {
+          console.log("No existing image found");
           setHasExistingImage(false);
           setExistingImagePath(null);
           setOriginalImageUrl(null);
@@ -201,33 +248,41 @@ export default function EditCategory() {
 
           // Set form values without image
           formik.setValues({
-            title: categoryObj.title || "",
+            name: Ingredient.name || "",
+            price: Ingredient.price || "",
+            description: Ingredient.description || "",
+            category: Ingredient.category || "",
             image: null,
           });
         }
       } catch (error) {
-        toast.error("Failed to load Category data properly: " + error);
+        console.error("Error populating form with subcategory data:", error);
+        toast.error("Failed to load ingredient data properly");
       }
     }
-  }, [CategoryData, isEdit]);
+  }, [IngredientData, isEdit]);
 
   // FIXED: Update validation when image state changes
   useEffect(() => {
     // Re-validate the form when image state changes
     if (formik.values.image !== undefined) {
+      console.log("Re-validating form due to image state change");
       formik.validateForm();
     }
   }, [hasExistingImage, hasNewImage, formik.values.image]);
 
   // Update subcategory mutation
   const updateMutation = useMutation({
-    mutationKey: ["update-category"],
-    mutationFn: ({ formData }) => updateCategory(id, formData, token),
+    mutationKey: ["update-ingredient"],
+    mutationFn: ({ formData }) => updateIngredient(id, formData, token),
     onSuccess: (data) => {
-      toast.success("Category updated successfully");
+      console.log("Update successful:", data);
+      toast.success("Ingredient updated successfully");
       navigate("/managment");
     },
     onError: (error) => {
+      console.error("Update error:", error);
+
       // Handle different types of errors
       if (error?.response?.status === 401 || error?.response?.status === 403) {
         toast.error("Session expired. Please login again.");
@@ -246,6 +301,8 @@ export default function EditCategory() {
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (file && file instanceof File) {
+      console.log("New image selected:", file.name || "unnamed file");
+
       // Validate file type
       const validTypes = [
         "image/jpeg",
@@ -275,9 +332,11 @@ export default function EditCategory() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
+        console.log("Image preview updated with new image");
       };
       reader.onerror = () => {
         toast.error("Failed to read the image file");
+        console.error("FileReader error");
       };
       reader.readAsDataURL(file);
     } else {
@@ -285,15 +344,25 @@ export default function EditCategory() {
     }
   };
 
+  // FIXED: Handle removing image with proper state management
   const handleRemoveImage = () => {
+    console.log(
+      "Removing image - hasNewImage:",
+      hasNewImage,
+      "hasExistingImage:",
+      hasExistingImage
+    );
+
     if (hasNewImage) {
       // If user uploaded a new image, remove it and go back to original
       if (hasExistingImage && originalImageUrl) {
         setImagePreview(originalImageUrl);
         formik.setFieldValue("image", "EXISTING_IMAGE_PLACEHOLDER");
+        console.log("Removed new image, reverting to original");
       } else {
         setImagePreview(null);
         formik.setFieldValue("image", null);
+        console.log("Removed new image, no original to revert to");
       }
       setHasNewImage(false);
     } else if (hasExistingImage) {
@@ -304,6 +373,7 @@ export default function EditCategory() {
       setExistingImagePath(null);
       formik.setFieldValue("image", null);
       setHasNewImage(false);
+      console.log("Removed original image");
     }
 
     // Reset file input safely
@@ -337,16 +407,17 @@ export default function EditCategory() {
     );
   }
 
-  if (isEdit && categoryLoading) {
+  if (isEdit && ingredientLoading) {
     return (
       <div className="min-h-screen bg-primary p-6 flex items-center justify-center">
-        <div className="text-white text-lg">Loading Category data...</div>
+        <div className="text-white text-lg">Loading ingredient data...</div>
       </div>
     );
   }
 
   // Error state
   if (isEdit && error) {
+    console.error("Subcategory loading error:", error);
     return (
       <div className="min-h-screen bg-primary p-6 flex items-center justify-center">
         <div className="text-red-400 text-lg">
@@ -361,13 +432,13 @@ export default function EditCategory() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-secondary rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-white mb-8 text-center">
-            {isEdit ? "Edit Category" : "Add New Category"}
+            {isEdit ? "Edit Ingredient" : "Add New Ingredient"}
           </h1>
 
           <form onSubmit={formik.handleSubmit} className="space-y-6">
             <div>
               <label className="block text-white font-medium mb-2">
-                Category Image{" "}
+                Ingredient Image{" "}
                 {!isEdit && <span className="text-red-400">*</span>}
               </label>
               <div className="flex items-center space-x-4">
@@ -391,7 +462,7 @@ export default function EditCategory() {
                   <div className="relative">
                     <img
                       src={imagePreview}
-                      alt="Category Preview"
+                      alt="Subcategory Preview"
                       className="w-20 h-20 object-cover rounded-lg border-2 border-gray-300"
                     />
                     <button
@@ -415,7 +486,7 @@ export default function EditCategory() {
               {originalImageUrl && !hasNewImage && (
                 <p className="text-blue-400 text-sm mt-1 flex items-center">
                   <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-                  Using current Category image
+                  Using current ingredient image
                 </p>
               )}
               {!originalImageUrl && !hasNewImage && isEdit && (
@@ -435,28 +506,135 @@ export default function EditCategory() {
             {/* Title Field */}
             <div>
               <label
-                htmlFor="title"
+                htmlFor="name"
                 className="block text-white font-medium mb-2"
               >
-                Category Name
+                Ingredient Name
               </label>
               <input
-                id="title"
-                name="title"
-                type="text"
+                id="name"
+                name="name"
+                type="name"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                value={formik.values.title}
+                value={formik.values.name}
                 className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
-                  formik.touched.title && formik.errors.title
+                  formik.touched.name && formik.errors.name
                     ? "border-red-500"
                     : "border-gray-300"
                 }`}
-                placeholder="Enter category name"
+                placeholder="Enter Ingredient name"
               />
-              {formik.touched.title && formik.errors.title && (
+              {formik.touched.name && formik.errors.name && (
                 <p className="text-red-400 text-sm mt-1">
-                  {formik.errors.title}
+                  {formik.errors.name}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-white font-medium mb-2"
+              >
+                description
+              </label>
+              <input
+                id="description"
+                name="description"
+                type="description"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.description}
+                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.description && formik.errors.description
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+                placeholder="Enter Ingredient description"
+              />
+              {formik.touched.description && formik.errors.description && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.description}
+                </p>
+              )}
+            </div>
+            <div>
+              <label
+                htmlFor="price"
+                className="block text-white font-medium mb-2"
+              >
+                Price
+              </label>
+              <input
+                id="naem"
+                name="price"
+                type="text"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.price}
+                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.price && formik.errors.price
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+                placeholder="Enter Ingredient price"
+              />
+              {formik.touched.price && formik.errors.price && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.price}
+                </p>
+              )}
+            </div>
+
+            {/* Category Field */}
+            <div className="w-full">
+              <label className="block font-semibold mb-2">Category *</label>
+              <select
+                name="category"
+                value={formik.values.category || "sauce"}
+                onChange={handleCategoryChange}
+                onBlur={formik.handleBlur}
+                className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.category && formik.errors.category
+                    ? "border-red-500"
+                    : "border-popular"
+                }`}
+              >
+                <option className="bg-secondary" value={"sauce"} key={"sauce"}>
+                  sauce
+                </option>
+                <option
+                  className="bg-secondary"
+                  value={"vegetable"}
+                  key={"vegetable"}
+                >
+                  vegetable
+                </option>
+                <option
+                  className="bg-secondary"
+                  value={"protein"}
+                  key={"protein"}
+                >
+                  protein
+                </option>
+                <option
+                  className="bg-secondary"
+                  value={"cheese"}
+                  key={"cheese"}
+                >
+                  cheese
+                </option>
+                <option className="bg-secondary" value={"bread"} key={"bread"}>
+                  bread
+                </option>
+                <option className="bg-secondary" value={"other"} key={"other"}>
+                  other
+                </option>
+              </select>
+              {formik.touched.category && formik.errors.category && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formik.errors.category}
                 </p>
               )}
             </div>

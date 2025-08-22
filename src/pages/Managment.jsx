@@ -3,6 +3,7 @@ import Category from "../components/category/Category";
 import { useState } from "react";
 import SubCategory from "../components/subCategory/SubCategory";
 import Dishes from "../components/dishes/Dishes";
+import Ingredient from "../components/ingredients/Ingredient";
 
 export default function Managment() {
   const [state, setState] = useState(1);
@@ -48,12 +49,24 @@ export default function Managment() {
             </span>
             <span>Product</span>
           </button>
+          <button
+            onClick={() => setState(4)}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              state == 4 ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>Ingredient</span>
+          </button>
         </div>
       </div>
       <div className="content">
         {state == 1 && <Category />}
         {state == 2 && <SubCategory />}
         {state == 3 && <Dishes />}
+        {state == 4 && <Ingredient />}
       </div>
     </div>
   );

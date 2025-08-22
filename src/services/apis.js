@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
-export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
-// export const imageBase = `http://localhost:3001/uploads/`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+export const baseUrl = `http://localhost:3001/api/v1`;
+export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
   const { data } = await axios.post(`${baseUrl}/auth/login`, body, {});
@@ -45,7 +45,6 @@ export async function get_staff_by_id(id, token) {
   return data;
 }
 export async function update_staff_by_id(id, payload, token) {
-  console.log(payload.values);
   const { data } = await axios.put(
     `${baseUrl}/auth/updateStaff/${id}`,
     payload.values,
@@ -98,6 +97,16 @@ export async function getCategories(token) {
   });
 
   return data?.data;
+}
+
+export async function getCategory(id, token) {
+  const { data } = await axios.get(`${baseUrl}/category/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+
+  return data;
 }
 export async function getsubCategoryByCategorie(id, token) {
   const { data } = await axios.get(`${baseUrl}/subcategory/category/${id}`, {
@@ -387,8 +396,8 @@ export async function deleteCategory(categoryId, token) {
   return data;
 }
 
-export async function updateCategory(categoryId, body, token) {
-  const { data } = await axios.put(`${baseUrl}/category/${categoryId}`, body, {
+export async function updateCategory(id, body, token) {
+  const { data } = await axios.put(`${baseUrl}/category/${id}`, body, {
     headers: {
       token: `${token}`,
     },
@@ -447,5 +456,48 @@ export async function activeOffer(offerId, token) {
       },
     }
   );
+  return data;
+}
+
+export async function createIngredinet(body, token) {
+  const { data } = await axios.post(`${baseUrl}/ingredients`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function getAllIngredinet(token) {
+  const { data } = await axios.get(`${baseUrl}/ingredients`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function deleteIngredient(ingId, token) {
+  const { data } = await axios.delete(`${baseUrl}/ingredients/${ingId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function updateIngredient(ingId, body, token) {
+  const { data } = await axios.put(`${baseUrl}/ingredients/${ingId}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function getIngredient(ingId, token) {
+  const { data } = await axios.get(`${baseUrl}/ingredients/${ingId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
   return data;
 }

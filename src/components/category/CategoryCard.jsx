@@ -1,14 +1,23 @@
 import { AlertTriangle, TableOfContents, Utensils, X } from "lucide-react";
-import { imageBase, deleteCategory, updateCategory } from "../../services/apis";
+import { imageBase, deleteCategory } from "../../services/apis";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function CategoryCard({ data, onDelete }) {
   const token = useSelector((store) => store.user.token);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const navigate = useNavigate();
 
+  const handleExploreClick = () => {
+    navigate(`/categoryDetails/${data?._id}`);
+  };
+
+  const handleEditClick = () => {
+    navigate(`/category/${data._id}`);
+  };
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
@@ -87,10 +96,16 @@ export default function CategoryCard({ data, onDelete }) {
 
           {/* Action Button */}
           <div className="pt-2 space-y-1.5">
-            <button className="w-full py-2.5 bg-popular/10 hover:bg-popular text-popular hover:text-white border border-popular/30 hover:border-popular rounded-lg font-medium text-sm transition-all duration-300">
+            <button
+              onClick={handleExploreClick}
+              className="w-full py-2.5 bg-popular/10 hover:bg-popular text-popular hover:text-white border border-popular/30 hover:border-popular rounded-lg font-medium text-sm transition-all duration-300"
+            >
               Explore Category
             </button>
-            <button className="w-full py-2 bg-popular/10 hover:bg-blue-800/20 text-popular hover:text-blue-400 border border-popular/30 hover:border-blue-500/50 rounded-lg font-medium text-sm transition-all duration-300">
+            <button
+              onClick={handleEditClick}
+              className="w-full py-2 bg-popular/10 hover:bg-blue-800/20 text-popular hover:text-blue-400 border border-popular/30 hover:border-blue-500/50 rounded-lg font-medium text-sm transition-all duration-300"
+            >
               Edit
             </button>
             <button

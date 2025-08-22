@@ -37,25 +37,6 @@ export default function SubCategoryCard({ data, onDelete }) {
     setIsDeleting(false);
   };
 
-  const handleShowDetails = async () => {
-    setShowDetailsModal(true);
-    setIsLoadingProducts(true);
-    try {
-      const response = await getproductsBysubCat(data?._id, token);
-      setProducts(response?.data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast.error("Failed to fetch products");
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
-
-  const handleCloseDetailsModal = () => {
-    setShowDetailsModal(false);
-    setProducts([]);
-  };
-
   const handleExploreClick = () => {
     navigate(`/subcategoryDetails/${data?._id}`);
   };

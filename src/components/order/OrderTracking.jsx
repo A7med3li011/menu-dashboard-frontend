@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Check, X, Users, MapPin, Clock, DollarSign } from "lucide-react";
+import {
+  Check,
+  X,
+  Users,
+  MapPin,
+  Clock,
+  DollarSign,
+  Loader2,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createOrder, getTables, imageBase } from "../../services/apis";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -9,6 +17,7 @@ import { useSelector } from "react-redux";
 const OrderTracking = () => {
   const [selectedTable, setSelectedTable] = useState(null);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate("");
   const token = useSelector((store) => store.user.token);
@@ -272,7 +281,12 @@ const OrderTracking = () => {
             </button>
 
             <button
-              onClick={() => mutate({ data: newOrder })}
+              onClick={async () => {
+                setIsLoading(true);
+                await mutate({ data: newOrder });
+                setIsLoading(false);
+              }}
+              disabled={isLoading}
               // disabled={!selectedTable}
               className={`order-1 sm:order-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base ${
                 selectedTable
@@ -281,7 +295,14 @@ const OrderTracking = () => {
               }`}
             >
               <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Confirm Order</span>
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin w-4 h-4" />
+                  <span>Confirming...</span>
+                </>
+              ) : (
+                <span>Confirm Order</span>
+              )}
             </button>
           </div>
         </div>

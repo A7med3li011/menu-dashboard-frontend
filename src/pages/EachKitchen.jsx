@@ -49,7 +49,7 @@ export default function EachKitchen() {
           .map((order, index) => (
             <KitchenCard
               data={order}
-              key={order.id || `order-${index}`} // Use unique ID if available
+              key={order._id || `order-${index}`} // Use unique ID if available
             />
           ))}
       </div>

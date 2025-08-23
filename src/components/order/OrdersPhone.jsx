@@ -347,9 +347,11 @@ export default function OrdersPhone() {
                     <div class="item">
                       <div class="item-name">
                         ${
-                          item?.product?.title ||
-                          item?.productType ||
-                          "Unknown Item"
+                          item?.productType == "custom product"
+                            ? item.productType
+                            : item?.productType == "offer"
+                            ? item?.product?.title + " (offer)"
+                            : item?.product?.title || "Unknown Item"
                         }
                         ${
                           extrasWithPrices.length > 0
@@ -531,6 +533,9 @@ export default function OrdersPhone() {
                   Customer
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Table
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
@@ -575,6 +580,35 @@ export default function OrdersPhone() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-white capitalize">
                       {order?.customer?.name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-white capitalize">
+                      {
+                        <div>
+                          <span>
+                            {order.status === "completed" &&
+                              (() => {
+                                const createdAt = new Date(order?.createdAt);
+                                const updatedAt = new Date(order?.updatedAt);
+                                const timeDiff = updatedAt - createdAt;
+
+                                const hours = Math.floor(
+                                  timeDiff / (1000 * 60 * 60)
+                                );
+                                const minutes = Math.floor(
+                                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+                                );
+
+                                if (hours > 0) {
+                                  return `${hours}h ${"  "}  ${minutes}m`;
+                                } else {
+                                  return `${minutes}m`;
+                                }
+                              })()}
+                          </span>
+                        </div>
+                      }
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

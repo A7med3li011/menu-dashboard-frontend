@@ -4,7 +4,7 @@ import { getAllOrdersWebsite, updateOrder } from "../../services/apis";
 
 import logo from "../../assets/logo.png";
 import { useSelector } from "react-redux";
-import { TableOfContents } from "lucide-react";
+import { Clock, TableOfContents } from "lucide-react";
 
 export default function AllOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -368,7 +368,7 @@ export default function AllOrders() {
                       }
                     </div>
                     <div class="item-qty">${item.quantity}</div>
-                    <div class="item-price">${totalItemPrice}</div>
+                    <div class="item-price">${basePrice}</div>
                   </div>
                 `;
             })
@@ -515,6 +515,9 @@ export default function AllOrders() {
                     Waiter
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                     Table
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
@@ -556,6 +559,35 @@ export default function AllOrders() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-white capitalize">
                         {order?.customer?.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-white capitalize">
+                        {
+                          <div>
+                            <span>
+                              {order.status === "completed" &&
+                                (() => {
+                                  const createdAt = new Date(order?.createdAt);
+                                  const updatedAt = new Date(order?.updatedAt);
+                                  const timeDiff = updatedAt - createdAt;
+
+                                  const hours = Math.floor(
+                                    timeDiff / (1000 * 60 * 60)
+                                  );
+                                  const minutes = Math.floor(
+                                    (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+                                  );
+
+                                  if (hours > 0) {
+                                    return `${hours}h ${"  "}  ${minutes}m`;
+                                  } else {
+                                    return `${minutes}m`;
+                                  }
+                                })()}
+                            </span>
+                          </div>
+                        }
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

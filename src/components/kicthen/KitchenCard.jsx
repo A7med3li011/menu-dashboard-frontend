@@ -33,23 +33,26 @@ export default function KitchenCard({ data = mockData }) {
 
   const queryClient = useQueryClient();
   const token = useSelector((store) => store.user.token);
-  const { mutate, isPending } = useMutation({
-    mutationKey: ["update-order-status"],
-    mutationFn: (payload) =>
-      updateStatusOrder(
-        {
-          orderId: data._id,
-          itemId: payload.data._id,
-          status: payload.data.status,
-        },
-        token
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["each_kitchen"],
-      });
+  const { mutate, isPending } = useMutation(
+    {
+      mutationKey: ["update-order-status"],
+      mutationFn: (payload) =>
+        updateStatusOrder(
+          {
+            orderId: data._id,
+            itemId: payload.data._id,
+            status: payload.data.status,
+          },
+          token
+        ),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["each_kitchen"],
+        });
+      },
     },
-  });
+    console.log(data)
+  );
 
   if (!data.items.length) return null;
 
@@ -117,6 +120,30 @@ export default function KitchenCard({ data = mockData }) {
           </div>
         </div>
 
+        {data.status === "completed" && (
+          <div className="bg-gradient-to-r mb-6 from-gray-500 to-gray-600 text-white py-2 px-4 rounded-xl font-semibold text-sm flex items-center space-x-2 shadow-lg mt-2">
+            <Clock className="w-4 h-4" />
+            <span>
+              {(() => {
+                const createdAt = new Date(data.createdAt);
+                const updatedAt = new Date(data.updatedAt);
+                const timeDiff = updatedAt - createdAt;
+
+                const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                const minutes = Math.floor(
+                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+                );
+
+                if (hours > 0) {
+                  return `${hours}h ${minutes}m`;
+                } else {
+                  return `${minutes}m`;
+                }
+              })()}
+            </span>
+          </div>
+        )}
+
         {/* Items Section */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2 mb-4">
@@ -137,7 +164,7 @@ export default function KitchenCard({ data = mockData }) {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
                     <h4 className="text-white font-semibold text-lg group-hover/item:text-popular transition-colors duration-200">
-                      {ele.product.title}
+                      {ele.product?.title || ele.customProduct?.name}
                     </h4>
                     <div className="flex items-center space-x-2 mt-1">
                       <span className="bg-popular/20 text-popular px-3 py-1 rounded-full text-sm font-medium">
@@ -169,7 +196,9 @@ export default function KitchenCard({ data = mockData }) {
                         Extras
                       </p>
                       <p className="text-gray-300 text-sm">
-                        {ele.customizations.extras.join(", ")}
+                        {ele?.customizations?.extrasWithPrices
+                          ?.map((extra) => extra.name)
+                          .join(", ")}
                       </p>
                     </div>
                   )}
@@ -182,6 +211,20 @@ export default function KitchenCard({ data = mockData }) {
                       </p>
                       <p className="text-gray-300 text-sm">
                         {ele.customizations.removals.join(", ")}
+                      </p>
+                    </div>
+                  )}
+
+                  {ele?.customProduct?.ingredients.length > 0 && (
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <p className="text-green-400 font-semibold text-sm mb-1 flex items-center">
+                        <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                        Ingredient
+                      </p>
+                      <p className="text-gray-300  rounded-full text-sm">
+                        {ele?.customProduct?.ingredients
+                          .map((ing) => ing.ingredient.name)
+                          .join(" ")}
                       </p>
                     </div>
                   )}

@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { getAllOrders, updateOrder } from "../../services/apis";
+import { getAllOrders, updateItems, updateOrder } from "../../services/apis";
 
 import logo from "../../assets/logo.png";
 import { useSelector } from "react-redux";
-import { TableOfContents } from "lucide-react";
+import { TableOfContents, Trash } from "lucide-react";
 
 export default function OrdersPhone() {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -26,6 +26,7 @@ export default function OrdersPhone() {
   } = useQuery({
     queryKey: ["all-orders-phone", pagination.page, search, filter],
     queryFn: () => getAllOrders(pagination.page, token, 1, search, filter),
+    refetchInterval: 120000,
   });
 
   const orderList = orderResponse?.data?.data || [];
@@ -114,7 +115,31 @@ export default function OrdersPhone() {
       img.src = imagePath;
     });
   };
+  const { mutate: mutate2 } = useMutation({
+    mutationKey: ["update-order-items"],
+    mutationFn: (payload) => {
+      // call your update function here
+      return updateItems(selectedOrder._id, token, payload.items);
+      // console.log(payload.items);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["all-orders"],
+      });
+      setSelectedOrder(null);
+    },
+  });
 
+  function handleRemoveItem(item) {
+    console.log(item);
+    console.log(selectedOrder);
+    const filterd = selectedOrder.items.filter((ele) => ele._id != item._id);
+
+    setSelectedOrder((prev) => ({
+      ...prev,
+      items: filterd,
+    }));
+  }
   // Print bill functionality with logo
   const handlePrintBill = async (order) => {
     console.log(order);
@@ -679,6 +704,13 @@ export default function OrdersPhone() {
                           Status: {item.innerStatus}
                         </p>
                       </div>
+                      <div
+                        className="text-red-500 cursor-pointer"
+                        onClick={() => handleRemoveItem(item)}
+                      >
+                        {" "}
+                        <Trash size={20} />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -694,6 +726,14 @@ export default function OrdersPhone() {
                     className="bg-popular text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
                   >
                     Print Bill
+                  </button>
+                  <button
+                    className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+                    onClick={() =>
+                      mutate2({ items: selectedOrder.items || [] })
+                    }
+                  >
+                    update
                   </button>
                 </div>
               </div>

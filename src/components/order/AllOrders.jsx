@@ -11,9 +11,7 @@ export default function AllOrders() {
   const [search, setSearch] = useState();
   const [searchInstance, setSearchInstance] = useState();
   const [filter, setFilter] = useState("all");
-  useEffect(() => {
-    console.log(selectedOrder);
-  }, [selectedOrder]);
+
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -29,6 +27,7 @@ export default function AllOrders() {
   } = useQuery({
     queryKey: ["all-orders", pagination.page, search, filter],
     queryFn: () => getAllOrders(pagination.page, token, 2, search, filter),
+    refetchInterval: 120000,
   });
 
   const orderList = orderResponse?.data?.data || [];
@@ -66,6 +65,7 @@ export default function AllOrders() {
       queryClient.invalidateQueries({
         queryKey: ["all-orders"],
       });
+      setSelectedOrder(null);
     },
   });
 
@@ -723,12 +723,6 @@ export default function AllOrders() {
                     </div>
                   ))}
                 </div>
-                <button
-                  className="bg-red-500"
-                  onClick={() => mutate2({ items: selectedOrder.items || [] })}
-                >
-                  delete
-                </button>
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t">
@@ -741,6 +735,14 @@ export default function AllOrders() {
                     className="bg-popular text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
                   >
                     Print Bill
+                  </button>
+                  <button
+                    className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+                    onClick={() =>
+                      mutate2({ items: selectedOrder.items || [] })
+                    }
+                  >
+                    update
                   </button>
                 </div>
               </div>

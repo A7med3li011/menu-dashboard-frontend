@@ -1,17 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { getAllOrdersApp, updateOrder } from "../../services/apis";
+import { getAllOrders, updateOrder } from "../../services/apis";
 
 import logo from "../../assets/logo.png";
 import { useSelector } from "react-redux";
+import { TableOfContents } from "lucide-react";
 
 export default function OrdersPhone() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
-  const [switcher, setSwitcher] = useState(1); // Added filter state
-  const [currentPage, setCurrentPage] = useState(1); // Renamed for clarity
-  const [allOrders, setAllOrders] = useState([]); // Store all orders for filtering
+  const [searchInstance, setSearchInstance] = useState("");
+  const [filter, setFilter] = useState("all");
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -20,84 +19,28 @@ export default function OrdersPhone() {
   });
 
   const token = useSelector((store) => store.user.token);
-
-  // Fetch all orders when component mounts or when search changes
   const {
     data: orderResponse,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["all-orders-phone-complete", activeSearch, switcher],
-    queryFn: async () => {
-      // Fetch first page to get total pages
-      const firstPage = await getAllOrdersApp(1, token, 1, activeSearch);
-      const totalPages = firstPage.data.pagination.totalPages;
-
-      // Fetch all pages
-      const allPagesPromises = [];
-      for (let page = 1; page <= totalPages; page++) {
-        allPagesPromises.push(getAllOrdersApp(page, token, 1, activeSearch));
-      }
-
-      const allPagesData = await Promise.all(allPagesPromises);
-      const allOrdersData = allPagesData.flatMap(
-        (pageData) => pageData.data.data
-      );
-
-      return {
-        data: allOrdersData,
-        pagination: firstPage.data.pagination,
-      };
-    },
-    enabled: !!token,
+    queryKey: ["all-orders-phone", pagination.page, search, filter],
+    queryFn: () => getAllOrders(pagination.page, token, 1, search, filter),
   });
 
-  // Update all orders when data changes
-  useEffect(() => {
-    if (orderResponse?.data) {
-      setAllOrders(orderResponse.data);
-    }
-  }, [orderResponse]);
+  const orderList = orderResponse?.data?.data || [];
 
-  // Update pagination info
+  // Fix: Update pagination whenever orderResponse changes (not just on mount)
   useEffect(() => {
-    if (orderResponse?.pagination) {
+    if (orderResponse?.data?.pagination) {
       setPagination((prev) => ({
         ...prev,
-        total: orderResponse.pagination.total,
-        limit: orderResponse.pagination.limit,
-        totalPages: orderResponse.pagination.totalPages,
+        total: orderResponse.data.pagination.total,
+        limit: orderResponse.data.pagination.limit,
+        totalPages: orderResponse.data.pagination.totalPages,
       }));
     }
   }, [orderResponse]);
-
-  // Filter orders based on switcher
-  const filteredOrders = allOrders.filter((order) => {
-    if (!order.status) return switcher === 1;
-
-    const status = order.status.toLowerCase();
-    switch (switcher) {
-      case 1:
-        return true; // All orders
-      case 2:
-        return status === "pending";
-      case 3:
-        return status === "preparing" || status === "prepering";
-      case 4:
-        return status === "completed";
-      case 5:
-        return status === "cancelled" || status === "canceled";
-      default:
-        return true;
-    }
-  });
-
-  // Pagination for filtered orders
-  const itemsPerPage = 10;
-  const totalFilteredPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
 
   const queryClient = useQueryClient();
   const { mutate } = useMutation({
@@ -105,23 +48,10 @@ export default function OrdersPhone() {
     mutationFn: (payload) => updateOrder(payload.id, payload.data, token),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["all-orders-phone-complete"],
+        queryKey: ["all-orders"],
       });
     },
   });
-
-  // Handle filter change
-  const handleSwitcherChange = (newSwitcher) => {
-    setSwitcher(newSwitcher);
-    setCurrentPage(1); // Reset to first page
-  };
-
-  // Handle page change
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalFilteredPages) {
-      setCurrentPage(newPage);
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -130,12 +60,9 @@ export default function OrdersPhone() {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
       case "cancelled":
-      case "canceled":
         return "bg-red-100 text-red-800";
-      case "preparing":
+      case "processing":
         return "bg-blue-100 text-blue-800";
-      case "ready":
-        return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -167,8 +94,8 @@ export default function OrdersPhone() {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "EGP",
-    }).format(amount);
+      currency: "USD",
+    }).format(amount); // Assuming amount is in cents
   };
 
   // Function to convert image to Base64
@@ -249,14 +176,13 @@ export default function OrdersPhone() {
             }
             .item-name {
               flex: 1;
-              text-align: left;
             }
             .item-qty {
-              width: 50px;
+              width: 30px;
               text-align: center;
             }
             .item-price {
-              width: 80px;
+              width: 60px;
               text-align: right;
             }
             .extras {
@@ -305,24 +231,23 @@ export default function OrdersPhone() {
                 ? `<img src="${logoBase64}" alt="Restaurant Logo" class="logo" />`
                 : ""
             }
-            <div class="restaurant-name">PATRIA</div>
+            <div class="restaurant-name">RESTAURANT NAME</div>
             <div>123 Main Street</div>
             <div>City, State 12345</div>
             <div>Phone: (555) 123-4567</div>
           </div>
           
           <div class="order-info">
-            <div><strong>Address: </strong> ${order.location}</div>
             <div><strong>Order #:</strong> ${order.OrderNumber}</div>
             <div><strong>Date:</strong> ${formatDate(order.createdAt)}</div>
           </div>
-<div class="items">
-  <div style="display: flex; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
-    <span style="width: 50%;">Item</span>
-    <span style="width: 25%; text-align: center;">Qty</span>
-    <span style="width: 25%; text-align: right;">Price</span>
-  </div>
-</div>
+          
+          <div class="items">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
+              <span>Item</span>
+              <span>Qty</span>
+              <span>Price</span>
+            </div>
             
             ${order.items
               .map((item) => {
@@ -346,13 +271,7 @@ export default function OrdersPhone() {
                 return `
                     <div class="item">
                       <div class="item-name">
-                        ${
-                          item?.productType == "custom product"
-                            ? item.productType
-                            : item?.productType == "offer"
-                            ? item?.product?.title + " (offer)"
-                            : item?.product?.title || "Unknown Item"
-                        }
+                        ${item?.product?.title || "Unknown Item"}
                         ${
                           extrasWithPrices.length > 0
                             ? `
@@ -362,6 +281,9 @@ export default function OrdersPhone() {
                                 (extra) => `
                               <div class="extra-item">
                                 <span>+ ${extra.name || "Extra"}</span>
+                                <span>+${formatCurrency(
+                                  +extra.price || 0
+                                )}</span>
                               </div>
                             `
                               )
@@ -372,12 +294,9 @@ export default function OrdersPhone() {
                         }
                       </div>
                       <div class="item-qty">${item.quantity}</div>
-                      <div class="item-price">${
-                        totalItemPrice ||
-                        parseFloat(
-                          order.totalPrice / order.items[0].quantity
-                        ).toFixed(2)
-                      } </div>
+                      <div class="item-price">${formatCurrency(
+                        totalItemPrice
+                      )}</div>
                     </div>
                   `;
               })
@@ -387,11 +306,7 @@ export default function OrdersPhone() {
           <div class="total-section">
             <div class="total-line">
               <span>Subtotal:</span>
-              <span>${
-                order.items[0].productType != "custom product"
-                  ? formatCurrency(+order.totalPrice)
-                  : parseFloat(order.totalPrice).toFixed(2)
-              }</span>
+              <span>${formatCurrency(+order.totalPrice)}</span>
             </div>
             <div class="total-line">
               <span>Tax:</span>
@@ -399,11 +314,7 @@ export default function OrdersPhone() {
             </div>
             <div class="total-line grand-total">
               <span>Total:</span>
-              <span>${
-                order.items[0].productType != "custom product"
-                  ? formatCurrency(+order.totalPrice)
-                  : parseFloat(order.totalPrice).toFixed(2)
-              }</span>
+              <span>${formatCurrency(+order.totalPrice)}</span>
             </div>
           </div>
           
@@ -429,11 +340,17 @@ export default function OrdersPhone() {
 
     // Wait for content to load, then print
     printWindow.onload = function () {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
+      printWindow.print();
+      printWindow.close();
     };
+  };
+
+  // Fix: Handle pagination changes properly
+  const handlePageChange = (newPage) => {
+    setPagination((prev) => ({
+      ...prev,
+      page: newPage,
+    }));
   };
 
   if (isLoading) {
@@ -454,72 +371,70 @@ export default function OrdersPhone() {
 
   return (
     <div className="p-6">
-      {/* Header with Filter Buttons and Search */}
-      <div className="flex justify-between">
-        <div className="px-6">
-          <div className="flex items-center border-[1px] rounded-md overflow-x-auto hide-scrollbar border-popular w-full sm:w-fit max-w-full">
-            <button
-              onClick={() => handleSwitcherChange(1)}
-              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-                switcher == 1 ? "bg-popular text-white" : ""
-              }`}
-            >
-              <span>All</span>
-            </button>
+      {/* Header */}
+      <div className="flex items-center justify-between my-10 flex-col md:flex-row gap-y-3">
+        <div className="flex items-center  border-[1px] rounded-md overflow-x-auto hide-scrollbar border-popular w-full md:w-fit">
+          <button
+            onClick={() => setFilter("all")}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              filter == "all" ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>All</span>
+          </button>
 
-            <button
-              onClick={() => handleSwitcherChange(2)}
-              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-                switcher == 2 ? "bg-popular text-white" : ""
-              }`}
-            >
-              <span>Pending</span>
-            </button>
-            <button
-              onClick={() => handleSwitcherChange(3)}
-              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-                switcher == 3 ? "bg-popular text-white" : ""
-              }`}
-            >
-              <span>Preparing</span>
-            </button>
-            <button
-              onClick={() => handleSwitcherChange(4)}
-              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-                switcher == 4 ? "bg-popular text-white" : ""
-              }`}
-            >
-              <span>Completed</span>
-            </button>
-            <button
-              onClick={() => handleSwitcherChange(5)}
-              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-                switcher == 5 ? "bg-popular text-white" : ""
-              }`}
-            >
-              <span>Canceled</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setFilter("pending")}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              filter == "pending" ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>Pending</span>
+          </button>
+          <button
+            onClick={() => setFilter("completed")}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              filter == "completed" ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>Completed</span>
+          </button>
+          <button
+            onClick={() => setFilter("cancelled")}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              filter == "cancelled" ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>Cancelled</span>
+          </button>
         </div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            if (e.target.value === "") {
-              setActiveSearch("");
-            }
-          }}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              setActiveSearch(search);
-            }
-          }}
-          className="px-3 block border-[1px] border-[#FFBC0F] mb-10 py-2 rounded-md focus:outline-none bg-black"
-          placeholder="Search here"
-        />
+        <div className="w-full md:w-fit">
+          <input
+            type="text"
+            value={searchInstance}
+            onChange={(e) => setSearchInstance(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                setSearch(searchInstance);
+              }
+            }}
+            className="px-3 block w-full  border-[1px] border-[#FFBC0F]  bg-black   py-2 rounded-md focus:outline-none "
+            placeholder="Search here"
+          />
+        </div>
       </div>
-
       {/* Table */}
       <div className="bg-secondary rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -531,9 +446,6 @@ export default function OrdersPhone() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Time
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Table
@@ -553,16 +465,13 @@ export default function OrdersPhone() {
                 <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Phone
-                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="text-white">
-              {paginatedOrders.map((order, index) => (
+              {orderList.map((order, index) => (
                 <tr
                   key={order._id}
                   className={`transition-colors ${
@@ -583,37 +492,8 @@ export default function OrdersPhone() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-white capitalize">
-                      {
-                        <div>
-                          <span>
-                            {order.status === "completed" &&
-                              (() => {
-                                const createdAt = new Date(order?.createdAt);
-                                const updatedAt = new Date(order?.updatedAt);
-                                const timeDiff = updatedAt - createdAt;
-
-                                const hours = Math.floor(
-                                  timeDiff / (1000 * 60 * 60)
-                                );
-                                const minutes = Math.floor(
-                                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-                                );
-
-                                if (hours > 0) {
-                                  return `${hours}h ${"  "}  ${minutes}m`;
-                                } else {
-                                  return `${minutes}m`;
-                                }
-                              })()}
-                          </span>
-                        </div>
-                      }
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-white">
-                      {order?.table?.title?.replace("_", " ").toUpperCase() ||
+                      {order?.table?.title.replace("_", " ").toUpperCase() ||
                         ""}
                     </div>
                   </td>
@@ -631,9 +511,7 @@ export default function OrdersPhone() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-white">
-                      {order.items[0].productType == "custom product"
-                        ? parseFloat(order?.totalPrice).toFixed(2)
-                        : order?.totalPrice}
+                      {order?.totalPrice}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -656,9 +534,6 @@ export default function OrdersPhone() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                     {formatDate(order.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {order?.customer?.phone || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex space-x-2">
@@ -696,69 +571,53 @@ export default function OrdersPhone() {
         </div>
 
         {/* Empty State */}
-        {paginatedOrders.length === 0 && (
+        {orderList.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-500 text-lg">No orders found</div>
             <div className="text-gray-400 text-sm mt-2">
-              {switcher === 5
-                ? "No canceled orders found"
-                : "Orders will appear here once they are created"}
+              Orders will appear here once they are created
             </div>
           </div>
         )}
       </div>
 
-      {/* Pagination */}
-      {totalFilteredPages > 0 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                currentPage === 1
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-popular text-white hover:bg-opacity-90"
-              }`}
-            >
-              Previous
-            </button>
+      {/* Pagination - Fixed styling and logic */}
+      <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              pagination.page === 1
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-popular text-white hover:bg-opacity-90"
+            }`}
+          >
+            Previous
+          </button>
 
-            <span className="text-white font-medium">
-              Page {currentPage} of {totalFilteredPages}
-            </span>
+          <span className="text-white font-medium">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
 
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalFilteredPages}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                currentPage === totalFilteredPages
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-popular text-white hover:bg-opacity-90"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-
-          <div className="text-sm text-gray-400">
-            Showing {paginatedOrders.length} of {filteredOrders.length} orders
-            {switcher !== 1 && (
-              <span className="ml-2 text-popular">
-                (
-                {switcher === 2
-                  ? "Pending"
-                  : switcher === 3
-                  ? "Preparing"
-                  : switcher === 4
-                  ? "Completed"
-                  : "Canceled"}{" "}
-                orders)
-              </span>
-            )}
-          </div>
+          <button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              pagination.page === pagination.totalPages
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-popular text-white hover:bg-opacity-90"
+            }`}
+          >
+            Next
+          </button>
         </div>
-      )}
+
+        {/* Optional: Show total items count */}
+        <div className="text-sm text-gray-400">
+          Showing {orderList.length} of {pagination.total} orders
+        </div>
+      </div>
 
       {/* Order Details Modal */}
       {selectedOrder && (

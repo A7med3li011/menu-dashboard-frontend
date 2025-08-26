@@ -11,10 +11,10 @@ export default function OrdersAndTables() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6 lg:mb-8 p-6">
-        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-wider ml-4 flex items-center justify-between w-full">
+        <div className="w-3 h-3 hidden md:block bg-red-500 rounded-full"></div>
+        <div className="w-3 h-3 hidden md:block bg-yellow-500 rounded-full"></div>
+        <div className="w-3 h-3 hidden md:block bg-green-500 rounded-full"></div>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-wider ml-4 flex  items-center justify-between w-full">
           <div>Orders Items</div>
           <button
             onClick={() => navigate("/make-order")}

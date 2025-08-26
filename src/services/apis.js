@@ -1,8 +1,8 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
 export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
+export const baseUrl = `http://localhost:3001/api/v1`;
 // export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
@@ -168,9 +168,39 @@ export async function getAllOrdersWebsite(page, token, bool, search) {
   return data;
 }
 
+export async function getAllOrders(page, token, bool, search, filter) {
+  const data = await axios.get(
+    `${baseUrl}/order/?page=${page}&from=${bool}&search=${
+      search || ""
+    }&filter=${filter}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+
 export async function getAllOrdersApp(page, token, bool, search) {
   const data = await axios.get(
     `${baseUrl}/order/?page=${page}&from=true&search=${search || ""}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+export async function updateItems(id, token, items) {
+  const data = await axios.put(
+    `${baseUrl}/order/items/${id}`,
+    {
+      items,
+    },
     {
       headers: {
         token: `${token}`,

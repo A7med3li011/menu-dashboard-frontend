@@ -44,6 +44,13 @@ export default function AllOrders() {
     }
   }, [orderResponse]);
 
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      page: 1,
+    }));
+  }, [search, filter]);
+
   const queryClient = useQueryClient();
   const { mutate } = useMutation({
     mutationKey: ["update-status"],
@@ -437,6 +444,18 @@ export default function AllOrders() {
               <TableOfContents size={15} />
             </span>
             <span>Pending</span>
+          </button>
+
+          <button
+            onClick={() => setFilter("preparing")}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              filter == "preparing" ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>Preparing</span>
           </button>
           <button
             onClick={() => setFilter("completed")}

@@ -43,6 +43,13 @@ export default function OrdersPhone() {
     }
   }, [orderResponse]);
 
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      page: 1,
+    }));
+  }, [search, filter]);
+
   const queryClient = useQueryClient();
   const { mutate } = useMutation({
     mutationKey: ["update-status"],
@@ -245,6 +252,11 @@ export default function OrdersPhone() {
               border-top: 1px dashed #000;
               font-size: 10px;
             }
+            .address {
+            margin-bottom: 10px;
+              padding-bottom: 10px;
+              border-bottom: 1px dashed #000;
+            }
             @media print {
               body { margin: 0; padding: 10px; }
             }
@@ -264,10 +276,17 @@ export default function OrdersPhone() {
           </div>
           
           <div class="order-info">
-            <div><strong>Address: </strong> ${order.location}</div>
             <div><strong>Order #:</strong> ${order.OrderNumber}</div>
             <div><strong>Date:</strong> ${formatDate(order.createdAt)}</div>
           </div>
+                    <div class="address">
+            <div><strong>Street: </strong> ${order.location.street} (${
+      order.location.region
+    })</div>
+            <div><strong>Home: </strong> ${order.location.home}</div>
+            <div><strong>Land Mark: </strong> ${order.location.landmark}</div>
+          </div>
+          
 <div class="items">
   <div style="display: flex; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
     <span style="width: 50%;">Item</span>
@@ -358,7 +377,6 @@ export default function OrdersPhone() {
               }</span>
             </div>
           </div>
-          
           <div class="footer">
             <div>Thank you for your business!</div>
             <div>Please come again</div>
@@ -439,6 +457,17 @@ export default function OrdersPhone() {
               <TableOfContents size={15} />
             </span>
             <span>Pending</span>
+          </button>
+          <button
+            onClick={() => setFilter("preparing")}
+            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+              filter == "preparing" ? "bg-popular text-white" : ""
+            }`}
+          >
+            <span>
+              <TableOfContents size={15} />
+            </span>
+            <span>Preparing</span>
           </button>
           <button
             onClick={() => setFilter("completed")}

@@ -118,9 +118,9 @@ export default function AllOrders() {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-EG", {
       style: "currency",
-      currency: "USD",
+      currency: "EGP",
     }).format(amount); // Assuming amount is in cents
   };
 
@@ -154,210 +154,223 @@ export default function AllOrders() {
     }
 
     const printContent = `
-      <html>
-        <head>
-          <title>Bill - Order #${order.OrderNumber}</title>
-          <style>
-            body {
-              font-family: 'Courier New', monospace;
-              margin: 0;
-              padding: 20px;
-              font-size: 12px;
-              line-height: 1.4;
-              max-width: 300px;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 2px solid #000;
-              padding-bottom: 10px;
-              margin-bottom: 15px;
-            }
-            .logo {
-              width: 80px;
-              height: 80px;
-              margin: 0 auto 10px;
-              display: block;
-            }
-            .restaurant-name {
-              font-size: 16px;
-              font-weight: bold;
-              margin-bottom: 5px;
-            }
-            .order-info {
-              margin-bottom: 15px;
-              border-bottom: 1px dashed #000;
-              padding-bottom: 10px;
-            }
-            .order-info div {
-              margin-bottom: 3px;
-            }
-            .items {
-              margin-bottom: 15px;
-            }
-            .item {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 5px;
-              padding: 3px 0;
-            }
-            .item-name {
-              flex: 1;
-            }
-            .item-qty {
-              width: 30px;
-              text-align: center;
-            }
-            .item-price {
-              width: 60px;
-              text-align: right;
-            }
-            .extras {
-              margin-left: 10px;
-              font-size: 11px;
-              color: #555;
-              margin-top: 2px;
-            }
-            .extra-item {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 1px;
-            }
-            .total-section {
-              border-top: 2px solid #000;
-              padding-top: 10px;
-              margin-top: 15px;
-            }
-            .total-line {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 3px;
-            }
-            .grand-total {
-              font-weight: bold;
-              font-size: 14px;
-              border-top: 1px solid #000;
-              padding-top: 5px;
-            }
-            .footer {
-              text-align: center;
-              margin-top: 20px;
-              padding-top: 10px;
-              border-top: 1px dashed #000;
-              font-size: 10px;
-            }
-            @media print {
-              body { margin: 0; padding: 10px; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${
-              logoBase64
-                ? `<img src="${logoBase64}" alt="Restaurant Logo" class="logo" />`
-                : ""
-            }
-            <div class="restaurant-name">RESTAURANT NAME</div>
-            <div>123 Main Street</div>
-            <div>City, State 12345</div>
-            <div>Phone: (555) 123-4567</div>
+    <html>
+      <head>
+        <title>Bill - Order #${order.OrderNumber}</title>
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.4;
+            max-width: 300px;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+          }
+          .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            display: block;
+          }
+          .restaurant-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .order-info {
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+          }
+          .order-info div {
+            margin-bottom: 3px;
+          }
+          .items {
+            margin-bottom: 15px;
+          }
+          .table-header {
+            display: flex;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+          }
+          .header-item {
+            flex: 1;
+            text-align: left;
+          }
+          .header-qty {
+            width: 50px;
+            text-align: center;
+          }
+          .header-price {
+            width: 80px;
+            text-align: right;
+          }
+          .item {
+            display: flex;
+            margin-bottom: 5px;
+            padding: 3px 0;
+          }
+          .item-name {
+            flex: 1;
+            text-align: left;
+          }
+          .item-qty {
+            width: 50px;
+            text-align: center;
+          }
+          .item-price {
+            width: 80px;
+            text-align: right;
+          }
+          .extras {
+            margin-left: 10px;
+            font-size: 11px;
+            color: #555;
+            margin-top: 2px;
+          }
+          .extra-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1px;
+          }
+          .total-section {
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            margin-top: 15px;
+          }
+          .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+          }
+          .grand-total {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px dashed #000;
+            font-size: 10px;
+          }
+          @media print {
+            body { margin: 0; padding: 10px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          ${
+            logoBase64
+              ? `<img src="${logoBase64}" alt="Restaurant Logo" class="logo" />`
+              : ""
+          }
+          <div class="restaurant-name">PATIRA</div>
+          <div>123 Main Street</div>
+          <div>City, State 12345</div>
+          <div>Phone: (555) 123-4567</div>
+        </div>
+        
+        <div class="order-info">
+          <div><strong>Order #:</strong> ${order.OrderNumber}</div>
+          <div><strong>Date:</strong> ${formatDate(order.createdAt)}</div>
+        </div>
+        
+        <div class="items">
+          <div class="table-header">
+            <span class="header-item">Item</span>
+            <span class="header-qty">Qty</span>
+            <span class="header-price">Price</span>
           </div>
           
-          <div class="order-info">
-            <div><strong>Order #:</strong> ${order.OrderNumber}</div>
-            <div><strong>Date:</strong> ${formatDate(order.createdAt)}</div>
-          </div>
-          
-          <div class="items">
-            <div style="display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
-              <span>Item</span>
-              <span>Qty</span>
-              <span>Price</span>
-            </div>
-            
-            ${order.items
-              .map((item) => {
-                // Calculate base price
-                const basePrice = +item?.product?.price || 0;
+          ${order.items
+            .map((item) => {
+              // Calculate base price
+              const basePrice = +item?.product?.price || 0;
 
-                // Calculate extras price
-                let extrasPrice = 0;
-                const extrasWithPrices =
-                  item?.customizations?.extrasWithPrices || [];
-                if (extrasWithPrices && Array.isArray(extrasWithPrices)) {
-                  extrasPrice = extrasWithPrices.reduce((total, extra) => {
-                    return total + (+extra.price || 0);
-                  }, 0);
-                }
+              // Calculate extras price
+              let extrasPrice = 0;
+              const extrasWithPrices =
+                item?.customizations?.extrasWithPrices || [];
+              if (extrasWithPrices && Array.isArray(extrasWithPrices)) {
+                extrasPrice = extrasWithPrices.reduce((total, extra) => {
+                  return total + (+extra.price || 0);
+                }, 0);
+              }
 
-                // Total item price (base + extras) * quantity
-                const totalItemPrice =
-                  (basePrice + extrasPrice) * +item.quantity;
+              // Total item price (base + extras) * quantity
+              const totalItemPrice = (basePrice + extrasPrice) * +item.quantity;
 
-                return `
-                    <div class="item">
-                      <div class="item-name">
-                        ${item?.product?.title || "Unknown Item"}
-                        ${
-                          extrasWithPrices.length > 0
-                            ? `
-                          <div class="extras">
-                            ${extrasWithPrices
-                              .map(
-                                (extra) => `
-                              <div class="extra-item">
-                                <span>+ ${extra.name || "Extra"}</span>
-                                <span>+${formatCurrency(
-                                  +extra.price || 0
-                                )}</span>
-                              </div>
-                            `
-                              )
-                              .join("")}
-                          </div>
-                        `
-                            : ""
-                        }
-                      </div>
-                      <div class="item-qty">${item.quantity}</div>
-                      <div class="item-price">${formatCurrency(
-                        totalItemPrice
-                      )}</div>
+              return `
+                  <div class="item">
+                    <div class="item-name">
+                      ${item?.product?.title || "Unknown Item"}
+                      ${
+                        extrasWithPrices.length > 0
+                          ? `
+                        <div class="extras">
+                          ${extrasWithPrices
+                            .map(
+                              (extra) => `
+                            <div class="extra-item">
+                              <span>+ ${extra.name || "Extra"}</span>
+                            </div>
+                          `
+                            )
+                            .join("")}
+                        </div>
+                      `
+                          : ""
+                      }
                     </div>
-                  `;
-              })
-              .join("")}
+                    <div class="item-qty">${item.quantity}</div>
+                    <div class="item-price">${basePrice}</div>
+                  </div>
+                `;
+            })
+            .join("")}
+        </div>
+        
+        <div class="total-section">
+          <div class="total-line">
+            <span>Subtotal:</span>
+            <span>${formatCurrency(+order.totalPrice)}</span>
           </div>
-          
-          <div class="total-section">
-            <div class="total-line">
-              <span>Subtotal:</span>
-              <span>${formatCurrency(+order.totalPrice)}</span>
-            </div>
-            <div class="total-line">
-              <span>Tax:</span>
-              <span>${formatCurrency(0)}</span>
-            </div>
-            <div class="total-line grand-total">
-              <span>Total:</span>
-              <span>${formatCurrency(+order.totalPrice)}</span>
-            </div>
+          <div class="total-line">
+            <span>Tax:</span>
+            <span>${formatCurrency(0)}</span>
           </div>
-          
-          <div class="footer">
-            <div>Thank you for your business!</div>
-            <div>Please come again</div>
-            <div style="margin-top: 10px;">
-              Total Items: ${order.items.length} | 
-              Total Qty: ${order.items.reduce(
-                (total, item) => total + item.quantity,
-                0
-              )}
-            </div>
+          <div class="total-line grand-total">
+            <span>Total:</span>
+            <span>${formatCurrency(+order.totalPrice)}</span>
           </div>
-        </body>
-      </html>
-    `;
+        </div>
+        
+        <div class="footer">
+          <div>Thank you for your business!</div>
+          <div>Please come again</div>
+          <div style="margin-top: 10px;">
+            Total Items: ${order.items.length} | 
+            Total Qty: ${order.items.reduce(
+              (total, item) => total + item.quantity,
+              0
+            )}
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
 
     // Create a new window for printing
     const printWindow = window.open("", "_blank", "width=400,height=600");
@@ -366,8 +379,10 @@ export default function AllOrders() {
 
     // Wait for content to load, then print
     printWindow.onload = function () {
-      printWindow.print();
-      printWindow.close();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
     };
   };
 
@@ -520,11 +535,37 @@ export default function AllOrders() {
                       {order?.customer?.name}
                     </div>
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-white capitalize">
-                      {order?.date || "N/A"}
+                      {
+                        <div>
+                          <span>
+                            {order.status === "completed" &&
+                              (() => {
+                                const createdAt = new Date(order?.createdAt);
+                                const updatedAt = new Date(order?.updatedAt);
+                                const timeDiff = updatedAt - createdAt;
+
+                                const hours = Math.floor(
+                                  timeDiff / (1000 * 60 * 60)
+                                );
+                                const minutes = Math.floor(
+                                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+                                );
+
+                                if (hours > 0) {
+                                  return `${hours}h ${"  "}  ${minutes}m`;
+                                } else {
+                                  return `${minutes}m`;
+                                }
+                              })()}
+                          </span>
+                        </div>
+                      }
                     </div>
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-white">
                       {order?.table?.title?.replace("_", " ")?.toUpperCase() ||

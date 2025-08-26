@@ -1,16 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { getAllOrders, updateItems, updateOrder } from "../../services/apis";
+import { getAllOrdersApp, updateOrder } from "../../services/apis";
 
 import logo from "../../assets/logo.png";
 import { useSelector } from "react-redux";
-import { TableOfContents, Trash } from "lucide-react";
 
 export default function OrdersPhone() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("");
-  const [searchInstance, setSearchInstance] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [activeSearch, setActiveSearch] = useState("");
+  const [switcher, setSwitcher] = useState(1); // Added filter state
+  const [currentPage, setCurrentPage] = useState(1); // Renamed for clarity
+  const [allOrders, setAllOrders] = useState([]); // Store all orders for filtering
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -19,29 +20,84 @@ export default function OrdersPhone() {
   });
 
   const token = useSelector((store) => store.user.token);
+
+  // Fetch all orders when component mounts or when search changes
   const {
     data: orderResponse,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["all-orders-phone", pagination.page, search, filter],
-    queryFn: () => getAllOrders(pagination.page, token, 1, search, filter),
-    refetchInterval: 120000,
+    queryKey: ["all-orders-phone-complete", activeSearch, switcher],
+    queryFn: async () => {
+      // Fetch first page to get total pages
+      const firstPage = await getAllOrdersApp(1, token, 1, activeSearch);
+      const totalPages = firstPage.data.pagination.totalPages;
+
+      // Fetch all pages
+      const allPagesPromises = [];
+      for (let page = 1; page <= totalPages; page++) {
+        allPagesPromises.push(getAllOrdersApp(page, token, 1, activeSearch));
+      }
+
+      const allPagesData = await Promise.all(allPagesPromises);
+      const allOrdersData = allPagesData.flatMap(
+        (pageData) => pageData.data.data
+      );
+
+      return {
+        data: allOrdersData,
+        pagination: firstPage.data.pagination,
+      };
+    },
+    enabled: !!token,
   });
 
-  const orderList = orderResponse?.data?.data || [];
-
-  // Fix: Update pagination whenever orderResponse changes (not just on mount)
+  // Update all orders when data changes
   useEffect(() => {
-    if (orderResponse?.data?.pagination) {
+    if (orderResponse?.data) {
+      setAllOrders(orderResponse.data);
+    }
+  }, [orderResponse]);
+
+  // Update pagination info
+  useEffect(() => {
+    if (orderResponse?.pagination) {
       setPagination((prev) => ({
         ...prev,
-        total: orderResponse.data.pagination.total,
-        limit: orderResponse.data.pagination.limit,
-        totalPages: orderResponse.data.pagination.totalPages,
+        total: orderResponse.pagination.total,
+        limit: orderResponse.pagination.limit,
+        totalPages: orderResponse.pagination.totalPages,
       }));
     }
   }, [orderResponse]);
+
+  // Filter orders based on switcher
+  const filteredOrders = allOrders.filter((order) => {
+    if (!order.status) return switcher === 1;
+
+    const status = order.status.toLowerCase();
+    switch (switcher) {
+      case 1:
+        return true; // All orders
+      case 2:
+        return status === "pending";
+      case 3:
+        return status === "preparing" || status === "prepering";
+      case 4:
+        return status === "completed";
+      case 5:
+        return status === "cancelled" || status === "canceled";
+      default:
+        return true;
+    }
+  });
+
+  // Pagination for filtered orders
+  const itemsPerPage = 10;
+  const totalFilteredPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
 
   const queryClient = useQueryClient();
   const { mutate } = useMutation({
@@ -49,10 +105,23 @@ export default function OrdersPhone() {
     mutationFn: (payload) => updateOrder(payload.id, payload.data, token),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["all-orders"],
+        queryKey: ["all-orders-phone-complete"],
       });
     },
   });
+
+  // Handle filter change
+  const handleSwitcherChange = (newSwitcher) => {
+    setSwitcher(newSwitcher);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalFilteredPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -61,9 +130,12 @@ export default function OrdersPhone() {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
       case "cancelled":
+      case "canceled":
         return "bg-red-100 text-red-800";
-      case "processing":
+      case "preparing":
         return "bg-blue-100 text-blue-800";
+      case "ready":
+        return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -96,7 +168,7 @@ export default function OrdersPhone() {
     return new Intl.NumberFormat("en-EG", {
       style: "currency",
       currency: "EGP",
-    }).format(amount); // Assuming amount is in cents
+    }).format(amount);
   };
 
   // Function to convert image to Base64
@@ -115,31 +187,7 @@ export default function OrdersPhone() {
       img.src = imagePath;
     });
   };
-  const { mutate: mutate2 } = useMutation({
-    mutationKey: ["update-order-items"],
-    mutationFn: (payload) => {
-      // call your update function here
-      return updateItems(selectedOrder._id, token, payload.items);
-      // console.log(payload.items);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["all-orders"],
-      });
-      setSelectedOrder(null);
-    },
-  });
 
-  function handleRemoveItem(item) {
-    console.log(item);
-    console.log(selectedOrder);
-    const filterd = selectedOrder.items.filter((ele) => ele._id != item._id);
-
-    setSelectedOrder((prev) => ({
-      ...prev,
-      items: filterd,
-    }));
-  }
   // Print bill functionality with logo
   const handlePrintBill = async (order) => {
     console.log(order);
@@ -342,7 +390,7 @@ export default function OrdersPhone() {
               <span>${
                 order.items[0].productType != "custom product"
                   ? formatCurrency(+order.totalPrice)
-                  : formatCurrency(parseFloat(order.totalPrice).toFixed(2))
+                  : parseFloat(order.totalPrice).toFixed(2)
               }</span>
             </div>
             <div class="total-line">
@@ -354,7 +402,7 @@ export default function OrdersPhone() {
               <span>${
                 order.items[0].productType != "custom product"
                   ? formatCurrency(+order.totalPrice)
-                  : formatCurrency(parseFloat(order.totalPrice).toFixed(2))
+                  : parseFloat(order.totalPrice).toFixed(2)
               }</span>
             </div>
           </div>
@@ -388,14 +436,6 @@ export default function OrdersPhone() {
     };
   };
 
-  // Fix: Handle pagination changes properly
-  const handlePageChange = (newPage) => {
-    setPagination((prev) => ({
-      ...prev,
-      page: newPage,
-    }));
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -414,70 +454,72 @@ export default function OrdersPhone() {
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between my-10 flex-col md:flex-row gap-y-3">
-        <div className="flex items-center  border-[1px] rounded-md overflow-x-auto hide-scrollbar border-popular w-full md:w-fit">
-          <button
-            onClick={() => setFilter("all")}
-            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-              filter == "all" ? "bg-popular text-white" : ""
-            }`}
-          >
-            <span>
-              <TableOfContents size={15} />
-            </span>
-            <span>All</span>
-          </button>
+      {/* Header with Filter Buttons and Search */}
+      <div className="flex justify-between">
+        <div className="px-6">
+          <div className="flex items-center border-[1px] rounded-md overflow-x-auto hide-scrollbar border-popular w-full sm:w-fit max-w-full">
+            <button
+              onClick={() => handleSwitcherChange(1)}
+              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+                switcher == 1 ? "bg-popular text-white" : ""
+              }`}
+            >
+              <span>All</span>
+            </button>
 
-          <button
-            onClick={() => setFilter("pending")}
-            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-              filter == "pending" ? "bg-popular text-white" : ""
-            }`}
-          >
-            <span>
-              <TableOfContents size={15} />
-            </span>
-            <span>Pending</span>
-          </button>
-          <button
-            onClick={() => setFilter("completed")}
-            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-              filter == "completed" ? "bg-popular text-white" : ""
-            }`}
-          >
-            <span>
-              <TableOfContents size={15} />
-            </span>
-            <span>Completed</span>
-          </button>
-          <button
-            onClick={() => setFilter("cancelled")}
-            className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
-              filter == "cancelled" ? "bg-popular text-white" : ""
-            }`}
-          >
-            <span>
-              <TableOfContents size={15} />
-            </span>
-            <span>Cancelled</span>
-          </button>
+            <button
+              onClick={() => handleSwitcherChange(2)}
+              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+                switcher == 2 ? "bg-popular text-white" : ""
+              }`}
+            >
+              <span>Pending</span>
+            </button>
+            <button
+              onClick={() => handleSwitcherChange(3)}
+              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+                switcher == 3 ? "bg-popular text-white" : ""
+              }`}
+            >
+              <span>Preparing</span>
+            </button>
+            <button
+              onClick={() => handleSwitcherChange(4)}
+              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+                switcher == 4 ? "bg-popular text-white" : ""
+              }`}
+            >
+              <span>Completed</span>
+            </button>
+            <button
+              onClick={() => handleSwitcherChange(5)}
+              className={`flex items-center gap-x-3 px-4 py-2 text-xs whitespace-nowrap min-w-fit ${
+                switcher == 5 ? "bg-popular text-white" : ""
+              }`}
+            >
+              <span>Canceled</span>
+            </button>
+          </div>
         </div>
-        <div className="w-full md:w-fit">
-          <input
-            type="text"
-            value={searchInstance}
-            onChange={(e) => setSearchInstance(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key == "Enter") {
-                setSearch(searchInstance);
-              }
-            }}
-            className="px-3 block w-full  border-[1px] border-[#FFBC0F]  bg-black   py-2 rounded-md focus:outline-none "
-            placeholder="Search here"
-          />
-        </div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            if (e.target.value === "") {
+              setActiveSearch("");
+            }
+          }}
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              setActiveSearch(search);
+            }
+          }}
+          className="px-3 block border-[1px] border-[#FFBC0F] mb-10 py-2 rounded-md focus:outline-none bg-black"
+          placeholder="Search here"
+        />
       </div>
+
       {/* Table */}
       <div className="bg-secondary rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -511,13 +553,16 @@ export default function OrdersPhone() {
                 <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Date
                 </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                  Phone
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="text-white">
-              {orderList.map((order, index) => (
+              {paginatedOrders.map((order, index) => (
                 <tr
                   key={order._id}
                   className={`transition-colors ${
@@ -568,7 +613,7 @@ export default function OrdersPhone() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-white">
-                      {order?.table?.title.replace("_", " ").toUpperCase() ||
+                      {order?.table?.title?.replace("_", " ").toUpperCase() ||
                         ""}
                     </div>
                   </td>
@@ -586,7 +631,9 @@ export default function OrdersPhone() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-white">
-                      {order?.totalPrice}
+                      {order.items[0].productType == "custom product"
+                        ? parseFloat(order?.totalPrice).toFixed(2)
+                        : order?.totalPrice}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -609,6 +656,9 @@ export default function OrdersPhone() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                     {formatDate(order.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {order?.customer?.phone || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex space-x-2">
@@ -646,53 +696,69 @@ export default function OrdersPhone() {
         </div>
 
         {/* Empty State */}
-        {orderList.length === 0 && (
+        {paginatedOrders.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-500 text-lg">No orders found</div>
             <div className="text-gray-400 text-sm mt-2">
-              Orders will appear here once they are created
+              {switcher === 5
+                ? "No canceled orders found"
+                : "Orders will appear here once they are created"}
             </div>
           </div>
         )}
       </div>
 
-      {/* Pagination - Fixed styling and logic */}
-      <div className="flex items-center justify-between mt-6">
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              pagination.page === 1
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-popular text-white hover:bg-opacity-90"
-            }`}
-          >
-            Previous
-          </button>
+      {/* Pagination */}
+      {totalFilteredPages > 0 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-popular text-white hover:bg-opacity-90"
+              }`}
+            >
+              Previous
+            </button>
 
-          <span className="text-white font-medium">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
+            <span className="text-white font-medium">
+              Page {currentPage} of {totalFilteredPages}
+            </span>
 
-          <button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              pagination.page === pagination.totalPages
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-popular text-white hover:bg-opacity-90"
-            }`}
-          >
-            Next
-          </button>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalFilteredPages}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === totalFilteredPages
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-popular text-white hover:bg-opacity-90"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+
+          <div className="text-sm text-gray-400">
+            Showing {paginatedOrders.length} of {filteredOrders.length} orders
+            {switcher !== 1 && (
+              <span className="ml-2 text-popular">
+                (
+                {switcher === 2
+                  ? "Pending"
+                  : switcher === 3
+                  ? "Preparing"
+                  : switcher === 4
+                  ? "Completed"
+                  : "Canceled"}{" "}
+                orders)
+              </span>
+            )}
+          </div>
         </div>
-
-        {/* Optional: Show total items count */}
-        <div className="text-sm text-gray-400">
-          Showing {orderList.length} of {pagination.total} orders
-        </div>
-      </div>
+      )}
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -754,13 +820,6 @@ export default function OrdersPhone() {
                           Status: {item.innerStatus}
                         </p>
                       </div>
-                      <div
-                        className="text-red-500 cursor-pointer"
-                        onClick={() => handleRemoveItem(item)}
-                      >
-                        {" "}
-                        <Trash size={20} />
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -776,14 +835,6 @@ export default function OrdersPhone() {
                     className="bg-popular text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
                   >
                     Print Bill
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
-                    onClick={() =>
-                      mutate2({ items: selectedOrder.items || [] })
-                    }
-                  >
-                    update
                   </button>
                 </div>
               </div>

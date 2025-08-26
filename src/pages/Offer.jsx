@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Plus,
   Edit,
@@ -459,6 +459,7 @@ const Offer = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOfferId, setSelectedOfferId] = useState(null);
+  const offersLoaded = useRef(false);
   const token = useSelector((store) => store.user.token);
 
   // Form state
@@ -471,14 +472,18 @@ const Offer = () => {
   });
 
   useEffect(() => {
-    loadProducts(); // Load products first
+    loadProducts();
   }, []);
 
   useEffect(() => {
-    if (state === 1 && Array.isArray(products)) {
-      loadOffers(); // Load offers after products are loaded
+    if (state === 1 && !offersLoaded.current) {
+      loadOffers();
+      offersLoaded.current = true;
+    } else if (state === 1 && offersLoaded.current) {
+      // Only reload if explicitly needed (like after creating an offer)
+      // You can add a separate flag for this
     }
-  }, [state, products]);
+  }, [state]);
 
   const loadOffers = async () => {
     try {
@@ -508,31 +513,12 @@ const Offer = () => {
   const loadProducts = async () => {
     try {
       const response = await getproducts(token);
-
-      // Handle different response structures for products
-      let productsData = [];
-      if (response?.data && Array.isArray(response.data)) {
-        productsData = response.data;
-      } else if (Array.isArray(response)) {
-        productsData = response;
-      } else if (response?.products && Array.isArray(response.products)) {
-        productsData = response.products;
-      }
-
+      let productsData = response?.data || response?.products || response || [];
       setProducts(productsData);
     } catch (error) {
-      console.error("Error loading products:", error);
       setProducts([]);
       toast.error("Failed to load products");
     }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   const handleImageChange = (e) => {

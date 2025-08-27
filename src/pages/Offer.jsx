@@ -719,6 +719,14 @@ const Offer = () => {
     setShowDetailsModal(true);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <div className="min-h-screen py-8">
       {/* Tab Navigation - styled like Management.jsx */}
@@ -949,7 +957,7 @@ const Offer = () => {
                       Price After Discount *
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="priceAfterDiscount"
                       value={formData.priceAfterDiscount}
                       onChange={handleInputChange}

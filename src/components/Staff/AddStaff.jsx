@@ -252,7 +252,7 @@ export default function AddStaff() {
                 <input
                   id="age"
                   name="age"
-                  type="number"
+                  type="text"
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.age}

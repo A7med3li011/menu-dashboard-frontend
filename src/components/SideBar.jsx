@@ -67,6 +67,12 @@ export default function SideBar() {
       access: ["admin", "operation", "waiter"],
     },
     {
+      title: "Sections",
+      icon: reservationIcon,
+      link: "/section",
+      access: ["admin", "operation"],
+    },
+    {
       title: "Kitchen",
       icon: kitchenIcon,
       link: "/kitchen",

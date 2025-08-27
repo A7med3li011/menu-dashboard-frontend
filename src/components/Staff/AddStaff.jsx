@@ -1,7 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { add_staff } from "../../services/apis";
+import { add_staff, getSections } from "../../services/apis";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -36,7 +36,7 @@ const staffSchema = Yup.object({
     .matches(/^[0-9+\-\s()]+$/, "Invalid phone number"),
   shiftFrom: Yup.string().required("Shift start time is required"),
   shiftTo: Yup.string().required("Shift end time is required"),
-  access: Yup.array().min(1, "At least one access level must be selected"),
+  sections: Yup.array().min(1, "At least one access level must be selected"),
 });
 
 export default function AddStaff() {
@@ -53,7 +53,7 @@ export default function AddStaff() {
       shiftFrom: "",
       shiftTo: "",
       role: "",
-      access: [],
+      sections: [],
     },
     validationSchema: staffSchema,
     onSubmit: (values) => {
@@ -62,27 +62,21 @@ export default function AddStaff() {
     },
   });
 
-  const accessOptions = [
-    "Dashboard",
-    "Sercive Managment",
-    "Menu",
-    "Staff",
-    "Inventory",
-    "Reports",
-    "Tables/Orders",
-    "Reservation",
-    "Kitchen",
-  ];
+  const handleSections = (option) => {
+    const currentAccess = formik.values.sections;
 
-  const handleAccessChange = (option) => {
-    const currentAccess = formik.values.access;
-    if (currentAccess.includes(option)) {
+    // Check if the option ID is already selected
+    const isSelected = currentAccess.includes(option._id);
+
+    if (isSelected) {
+      // Remove the option ID from the array
       formik.setFieldValue(
-        "access",
-        currentAccess.filter((item) => item !== option)
+        "sections",
+        currentAccess.filter((id) => id !== option._id)
       );
     } else {
-      formik.setFieldValue("access", [...currentAccess, option]);
+      // Add the option ID to the array
+      formik.setFieldValue("sections", [...currentAccess, option._id]);
     }
   };
 
@@ -95,6 +89,11 @@ export default function AddStaff() {
       toast.success("user added sucessfully");
       navigate("/staff");
     },
+  });
+
+  const { data: sections } = useQuery({
+    queryKey: ["get-sections"],
+    queryFn: () => getSections(token),
   });
 
   const togglePasswordVisibility = () => {
@@ -426,34 +425,34 @@ export default function AddStaff() {
               </div>
             </div>
 
-            {/* Access Permissions */}
+            {/* Section Permissions */}
             <div>
               <label className="block text-white font-medium mb-3">
-                Access Permissions
+                Section Permissions
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {accessOptions.map((option) => (
+                {sections?.data?.map((option) => (
                   <label
-                    key={option}
+                    key={option._id}
                     className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                      formik.values.access.includes(option)
+                      formik.values.sections.includes(option._id)
                         ? "bg-popular text-white"
                         : "bg-white text-gray-800 hover:bg-gray-100"
                     }`}
                   >
                     <input
                       type="checkbox"
-                      checked={formik.values.access.includes(option)}
-                      onChange={() => handleAccessChange(option)}
+                      checked={formik.values.sections.includes(option._id)}
+                      onChange={() => handleSections(option)}
                       className="sr-only"
                     />
-                    <span className="text-sm font-medium">{option}</span>
+                    <span className="text-sm font-medium">{option?.title}</span>
                   </label>
                 ))}
               </div>
-              {formik.touched.access && formik.errors.access && (
+              {formik.touched.sections && formik.errors.sections && (
                 <p className="text-red-400 text-sm mt-2">
-                  {formik.errors.access}
+                  {formik.errors.sections}
                 </p>
               )}
             </div>

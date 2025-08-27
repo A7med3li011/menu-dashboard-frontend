@@ -33,6 +33,8 @@ import IngredientAdd from "./components/ingredients/IngredientAdd";
 import EditIngredient from "./components/ingredients/EditIngredient";
 import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
+import Section from "./pages/Section";
+import TablesBySection from "./pages/TablesBySection";
 
 function App() {
   const router = createBrowserRouter([
@@ -185,6 +187,22 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
               <Kitchen />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/section",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
+              <Section />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/section-tables/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
+              <TablesBySection />
             </RoleBasedRoute>
           ),
         },

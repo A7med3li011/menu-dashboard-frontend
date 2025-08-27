@@ -1,7 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { get_staff_by_id, update_staff_by_id } from "../../services/apis"; // Added update_staff
+import {
+  get_staff_by_id,
+  getSections,
+  update_staff_by_id,
+} from "../../services/apis"; // Added update_staff
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react"; // Added useEffect
@@ -56,7 +60,7 @@ export default function EditStaff() {
       shiftFrom: "",
       shiftTo: "",
       role: "",
-      access: [],
+      sections: [],
     },
     validationSchema: staffSchema,
     onSubmit: (values) => {
@@ -66,27 +70,25 @@ export default function EditStaff() {
     },
   });
 
-  const accessOptions = [
-    "Dashboard",
-    "Service Management", // Fixed typo
-    "Menu",
-    "Staff",
-    "Inventory",
-    "Reports",
-    "Tables/Orders",
-    "Reservation",
-    "Kitchen",
-  ];
+  const { data: sections } = useQuery({
+    queryKey: ["get-sections"],
+    queryFn: () => getSections(token),
+  });
 
-  const handleAccessChange = (option) => {
-    const currentAccess = formik.values.access;
-    if (currentAccess.includes(option)) {
+  const handleSections = (option) => {
+    const currentAccess = formik.values.sections || [];
+
+    const isSelected = currentAccess.includes(option._id);
+
+    if (isSelected) {
+      // Remove ID
       formik.setFieldValue(
-        "access",
-        currentAccess.filter((item) => item !== option)
+        "sections",
+        currentAccess.filter((id) => id !== option._id)
       );
     } else {
-      formik.setFieldValue("access", [...currentAccess, option]);
+      // Add ID
+      formik.setFieldValue("sections", [...currentAccess, option._id]);
     }
   };
 
@@ -114,7 +116,7 @@ export default function EditStaff() {
         shiftFrom: userData?.user?.shiftFrom || "",
         shiftTo: userData?.user?.shiftTo || "",
         role: userData?.user?.role || "",
-        access: userData?.user?.permissions || [],
+        sections: userData?.user?.sections || [],
       });
     }
   }, [userData, isEdit]);
@@ -409,31 +411,31 @@ export default function EditStaff() {
             {/* Access Permissions */}
             <div>
               <label className="block text-white font-medium mb-3">
-                Access Permissions
+                Section Permissions
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {accessOptions.map((option) => (
+                {sections?.data?.map((option) => (
                   <label
-                    key={option}
+                    key={option._id}
                     className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                      formik.values.access.includes(option)
+                      formik?.values?.sections?.includes(option._id)
                         ? "bg-popular text-white"
                         : "bg-white text-gray-800 hover:bg-gray-100"
                     }`}
                   >
                     <input
                       type="checkbox"
-                      checked={formik.values.access.includes(option)}
-                      onChange={() => handleAccessChange(option)}
+                      checked={formik?.values?.sections?.includes(option._id)}
+                      onChange={() => handleSections(option)}
                       className="sr-only"
                     />
-                    <span className="text-sm font-medium">{option}</span>
+                    <span className="text-sm font-medium">{option.title}</span>
                   </label>
                 ))}
               </div>
-              {formik.touched.access && formik.errors.access && (
+              {formik.touched.sections && formik.errors.sections && (
                 <p className="text-red-400 text-sm mt-2">
-                  {formik.errors.access}
+                  {formik.errors.sections}
                 </p>
               )}
             </div>

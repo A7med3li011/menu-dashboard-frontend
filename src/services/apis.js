@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
-export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
-// export const imageBase = `http://localhost:3001/uploads/`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+export const baseUrl = `http://localhost:3001/api/v1`;
+export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
   const { data } = await axios.post(`${baseUrl}/auth/login`, body, {});
@@ -45,6 +45,7 @@ export async function get_staff_by_id(id, token) {
   return data;
 }
 export async function update_staff_by_id(id, payload, token) {
+  console.log(payload);
   const { data } = await axios.put(
     `${baseUrl}/auth/updateStaff/${id}`,
     payload.values,
@@ -216,6 +217,75 @@ export async function getOrdersByKitchen(id, token) {
       token: `${token}`,
     },
   });
+
+  return data;
+}
+export async function addSection(title, token) {
+  const { data } = await axios.post(
+    `${baseUrl}/section/`,
+    {
+      title,
+    },
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+export async function updateSection(id, title, token) {
+  const { data } = await axios.put(
+    `${baseUrl}/section/${id}`,
+    {
+      title,
+    },
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+export async function deletedSection(id, token) {
+  const { data } = await axios.delete(
+    `${baseUrl}/section/${id}`,
+
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+export async function relatedTables(id, token) {
+  const { data } = await axios.get(
+    `${baseUrl}/section/${id}`,
+
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+
+  return data;
+}
+export async function getSections(token) {
+  const { data } = await axios.get(
+    `${baseUrl}/section/`,
+
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
 
   return data;
 }

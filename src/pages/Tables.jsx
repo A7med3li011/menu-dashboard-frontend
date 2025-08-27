@@ -5,6 +5,7 @@ import {
   imageBase,
   updateTable,
   createTable,
+  getSections,
 } from "../services/apis";
 import { useSelector } from "react-redux";
 
@@ -15,6 +16,11 @@ export default function Tables() {
     title: "",
     image: null,
   });
+  const { data: sections } = useQuery({
+    queryKey: ["ge-sections"],
+    queryFn: () => getSections(token),
+  });
+
   const [formErrors, setFormErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -121,6 +127,7 @@ export default function Tables() {
     const submitData = new FormData();
     submitData.append("title", formData.title);
     submitData.append("image", formData.image);
+    submitData.append("section", formData.section);
 
     createTableMutate(submitData);
   };
@@ -212,6 +219,9 @@ export default function Tables() {
                 </h3>
 
                 <div className="text-sm text-gray-400 mb-4">
+                  Section : {table?.section?.title}
+                </div>
+                <div className="text-sm text-gray-400 mb-4">
                   Table ID: {table._id.slice(-6)}
                 </div>
 
@@ -292,6 +302,45 @@ export default function Tables() {
                 {formErrors.title && (
                   <p className="text-red-500 text-sm mt-1">
                     {formErrors.title}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Select Section <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="section"
+                  value={formData.section || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 bg-gray-700 border rounded-md text-white focus:outline-none focus:ring-2 focus:ring-popular appearance-none cursor-pointer ${
+                    formErrors.section ? "border-red-500" : "border-gray-600"
+                  }`}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: "right 0.5rem center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "1.5em 1.5em",
+                    paddingRight: "2.5rem",
+                  }}
+                >
+                  <option value="" disabled className="text-gray-400">
+                    Choose a section
+                  </option>
+                  {sections?.data?.map((ele, index) => (
+                    <option
+                      key={ele._id}
+                      value={ele._id}
+                      className="bg-gray-700 text-white"
+                    >
+                      {ele?.title}
+                    </option>
+                  ))}
+                </select>
+                {formErrors.section && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.section}
                   </p>
                 )}
               </div>

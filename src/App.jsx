@@ -35,7 +35,7 @@ import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 import Section from "./pages/Section";
 import TablesBySection from "./pages/TablesBySection";
-import Location from "./pages/location";
+import Location from "./pages/Location";
 
 function App() {
   const router = createBrowserRouter([

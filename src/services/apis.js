@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
-export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
-// export const imageBase = `http://localhost:3001/uploads/`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+export const baseUrl = `http://localhost:3001/api/v1`;
+export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
   const { data } = await axios.post(`${baseUrl}/auth/login`, body, {});
@@ -595,6 +595,24 @@ export async function updateIngredient(ingId, body, token) {
 }
 export async function getIngredient(ingId, token) {
   const { data } = await axios.get(`${baseUrl}/ingredients/${ingId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function getLocations(token) {
+  const { data } = await axios.get(`${baseUrl}/location/`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function updateLocation(id, body, token) {
+  const { data } = await axios.put(`${baseUrl}/location/${id}`, body, {
     headers: {
       token: `${token}`,
     },

@@ -35,6 +35,7 @@ import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 import Section from "./pages/Section";
 import TablesBySection from "./pages/TablesBySection";
+import Location from "./pages/location";
 
 function App() {
   const router = createBrowserRouter([
@@ -195,6 +196,14 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
               <Section />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/location",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
+              <Location />
             </RoleBasedRoute>
           ),
         },

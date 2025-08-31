@@ -17,7 +17,7 @@ export default function SideBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector((store) => store.user.user);
-  console.log(user.role);
+
 
   const routes = [
     {

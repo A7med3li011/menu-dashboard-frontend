@@ -66,7 +66,6 @@ export default function AllOrders() {
     mutationFn: (payload) => {
       // call your update function here
       return updateItems(selectedOrder._id, token, payload.items);
-      // console.log(payload.items);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -77,8 +76,6 @@ export default function AllOrders() {
   });
 
   function handleRemoveItem(item) {
-    console.log(item);
-    console.log(selectedOrder);
     const filterd = selectedOrder.items.filter((ele) => ele._id != item._id);
 
     setSelectedOrder((prev) => ({
@@ -150,8 +147,6 @@ export default function AllOrders() {
 
   // Print bill functionality with logo
   const handlePrintBill = async (order) => {
-    console.log(order);
-
     // Convert logo to Base64
     let logoBase64 = "";
     try {

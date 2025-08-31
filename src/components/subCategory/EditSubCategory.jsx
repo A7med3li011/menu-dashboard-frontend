@@ -59,12 +59,6 @@ export default function EditSubCategory() {
 
   // Check token validity on component mount
   useEffect(() => {
-    console.log("=== TOKEN DEBUG ===");
-    console.log("Token exists:", !!token);
-    console.log("Token type:", typeof token);
-    console.log("Token length:", token?.length);
-    console.log("==================");
-
     if (!token || typeof token !== "string" || token.trim() === "") {
       toast.error("Authentication token is missing. Please login again.");
       navigate("/login");
@@ -76,24 +70,19 @@ export default function EditSubCategory() {
       // If your token is JWT, you can decode and check expiration
       const tokenParts = token.split(".");
       if (tokenParts.length !== 3) {
-        console.log("Token parts count:", tokenParts.length);
         throw new Error("Invalid token format - expected JWT with 3 parts");
       }
 
       // Try to decode the payload
       const payload = JSON.parse(atob(tokenParts[1]));
-      console.log("Token payload:", payload);
 
       // Check expiration
       if (payload.exp) {
         const currentTime = Math.floor(Date.now() / 1000);
         if (payload.exp < currentTime) {
-          console.log("Token expired at:", new Date(payload.exp * 1000));
           throw new Error("Token has expired");
         }
       }
-
-      console.log("Token validation successful");
     } catch (error) {
       console.error("Token validation error:", error);
       toast.error(
@@ -107,12 +96,6 @@ export default function EditSubCategory() {
   useEffect(() => {
     const schema = createSubCategorySchema(isEdit, hasExistingImage);
     setValidationSchema(schema);
-    console.log(
-      "Validation schema updated - isEdit:",
-      isEdit,
-      "hasExistingImage:",
-      hasExistingImage
-    );
   }, [isEdit, hasExistingImage]);
 
   const formik = useFormik({
@@ -124,10 +107,6 @@ export default function EditSubCategory() {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
-      console.log("Form submission values:", values);
-      console.log("Has new image:", hasNewImage);
-      console.log("Has existing image:", hasExistingImage);
-
       const formData = new FormData();
 
       // Add the subcategory ID to formData since API expects it in body
@@ -138,12 +117,10 @@ export default function EditSubCategory() {
         if (key === "image") {
           // Only append image if a new one was selected and it's a valid File object
           if (hasNewImage && values[key] && values[key] instanceof File) {
-            console.log("Appending new image file:", values[key].name);
             formData.append(key, values[key]);
           }
           // If keeping existing image, append the path
           else if (!hasNewImage && existingImagePath) {
-            console.log("Keeping existing image:", existingImagePath);
             formData.append("imagePath", existingImagePath);
           }
         } else {
@@ -152,19 +129,6 @@ export default function EditSubCategory() {
       });
 
       // Debug: Log FormData contents safely
-      console.log("FormData contents:");
-      for (let pair of formData.entries()) {
-        if (pair[0] === "image" || pair[0] === "imagePath") {
-          const file = pair[1];
-          if (file && typeof file === "object" && file instanceof File) {
-            console.log(pair[0] + ": " + (file.name || "unnamed file"));
-          } else {
-            console.log(pair[0] + ": " + String(file));
-          }
-        } else {
-          console.log(pair[0] + ": " + pair[1]);
-        }
-      }
 
       updateMutation.mutate({ formData });
     },
@@ -192,9 +156,7 @@ export default function EditSubCategory() {
     queryKey: ["subcategory", id],
     queryFn: () => getSubCategoryById(id, token),
     enabled: isEdit && !!id && !!token,
-    onSuccess: (data) => {
-      console.log("Subcategory fetched successfully:", data);
-    },
+
     onError: (error) => {
       console.error("Error fetching subcategory:", error);
       if (error?.response?.status === 401 || error?.response?.status === 403) {
@@ -210,8 +172,6 @@ export default function EditSubCategory() {
       try {
         const subCategory = subCategoryData.data || subCategoryData;
 
-        console.log("Subcategory data received:", subCategory);
-
         // Handle existing image with proper error handling
         let imageExists = false;
         let imagePath = null;
@@ -219,10 +179,6 @@ export default function EditSubCategory() {
         if (subCategory.image && typeof subCategory.image === "object") {
           // Handle case where image is an object with filename property
           if (subCategory.image.filename) {
-            console.log(
-              "Setting up existing image:",
-              subCategory.image.filename
-            );
             imageExists = true;
             imagePath = subCategory.image.filename;
           }
@@ -231,7 +187,7 @@ export default function EditSubCategory() {
           subCategory.image.trim() !== ""
         ) {
           // Handle case where image is just a string path
-          console.log("Setting up existing image:", subCategory.image);
+
           imageExists = true;
           imagePath = subCategory.image;
         }
@@ -251,7 +207,6 @@ export default function EditSubCategory() {
             image: "EXISTING_IMAGE_PLACEHOLDER", // Use placeholder for existing images
           });
         } else {
-          console.log("No existing image found");
           setHasExistingImage(false);
           setExistingImagePath(null);
           setOriginalImageUrl(null);
@@ -265,13 +220,6 @@ export default function EditSubCategory() {
             image: null,
           });
         }
-
-        console.log("Form populated with values:", {
-          title: subCategory.title,
-          category: subCategory.category?._id,
-          hasExistingImage: imageExists,
-          imagePath: imagePath,
-        });
       } catch (error) {
         console.error("Error populating form with subcategory data:", error);
         toast.error("Failed to load subcategory data properly");
@@ -283,7 +231,6 @@ export default function EditSubCategory() {
   useEffect(() => {
     // Re-validate the form when image state changes
     if (formik.values.image !== undefined) {
-      console.log("Re-validating form due to image state change");
       formik.validateForm();
     }
   }, [hasExistingImage, hasNewImage, formik.values.image]);
@@ -293,7 +240,6 @@ export default function EditSubCategory() {
     mutationKey: ["update-subcategory"],
     mutationFn: ({ formData }) => updateSubCategory(id, formData, token),
     onSuccess: (data) => {
-      console.log("Update successful:", data);
       toast.success("Subcategory updated successfully");
       navigate("/managment");
     },
@@ -318,8 +264,6 @@ export default function EditSubCategory() {
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (file && file instanceof File) {
-      console.log("New image selected:", file.name || "unnamed file");
-
       // Validate file type
       const validTypes = [
         "image/jpeg",
@@ -349,7 +293,6 @@ export default function EditSubCategory() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
-        console.log("Image preview updated with new image");
       };
       reader.onerror = () => {
         toast.error("Failed to read the image file");
@@ -363,23 +306,14 @@ export default function EditSubCategory() {
 
   // FIXED: Handle removing image with proper state management
   const handleRemoveImage = () => {
-    console.log(
-      "Removing image - hasNewImage:",
-      hasNewImage,
-      "hasExistingImage:",
-      hasExistingImage
-    );
-
     if (hasNewImage) {
       // If user uploaded a new image, remove it and go back to original
       if (hasExistingImage && originalImageUrl) {
         setImagePreview(originalImageUrl);
         formik.setFieldValue("image", "EXISTING_IMAGE_PLACEHOLDER");
-        console.log("Removed new image, reverting to original");
       } else {
         setImagePreview(null);
         formik.setFieldValue("image", null);
-        console.log("Removed new image, no original to revert to");
       }
       setHasNewImage(false);
     } else if (hasExistingImage) {
@@ -390,7 +324,6 @@ export default function EditSubCategory() {
       setExistingImagePath(null);
       formik.setFieldValue("image", null);
       setHasNewImage(false);
-      console.log("Removed original image");
     }
 
     // Reset file input safely
@@ -443,13 +376,6 @@ export default function EditSubCategory() {
       </div>
     );
   }
-
-  console.log("Current form values:", formik.values);
-  console.log("Form errors:", formik.errors);
-  console.log("Has new image:", hasNewImage);
-  console.log("Has existing image:", hasExistingImage);
-  console.log("Original image URL:", originalImageUrl);
-  console.log("Image preview:", imagePreview);
 
   return (
     <div className="min-h-screen bg-primary p-6">

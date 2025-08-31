@@ -80,7 +80,6 @@ export default function EditIngredient() {
       // If your token is JWT, you can decode and check expiration
       const tokenParts = token.split(".");
       if (tokenParts.length !== 3) {
-        console.log("Token parts count:", tokenParts.length);
         throw new Error("Invalid token format - expected JWT with 3 parts");
       }
 
@@ -91,12 +90,9 @@ export default function EditIngredient() {
       if (payload.exp) {
         const currentTime = Math.floor(Date.now() / 1000);
         if (payload.exp < currentTime) {
-          console.log("Token expired at:", new Date(payload.exp * 1000));
           throw new Error("Token has expired");
         }
       }
-
-      console.log("Token validation successful");
     } catch (error) {
       console.error("Token validation error:", error);
       toast.error(
@@ -110,12 +106,6 @@ export default function EditIngredient() {
   useEffect(() => {
     const schema = createIngredientSchema(isEdit, hasExistingImage);
     setValidationSchema(schema);
-    console.log(
-      "Validation schema updated - isEdit:",
-      isEdit,
-      "hasExistingImage:",
-      hasExistingImage
-    );
   }, [isEdit, hasExistingImage]);
 
   // Fetch product data for editing
@@ -127,9 +117,7 @@ export default function EditIngredient() {
     queryKey: ["product", id],
     queryFn: () => getIngredient(id, token),
     enabled: isEdit && !!id,
-    onSuccess: (data) => {
-      console.log("Ingredient fetched successfully:", data);
-    },
+
     onError: (error) => {
       console.error("Error fetching ingredient:", error);
     },
@@ -161,12 +149,10 @@ export default function EditIngredient() {
         if (key === "image") {
           // Only append image if a new one was selected and it's a valid File object
           if (hasNewImage && values[key] && values[key] instanceof File) {
-            console.log("Appending new image file:", values[key].name);
             formData.append(key, values[key]);
           }
           // If keeping existing image, append the path
           else if (!hasNewImage && existingImagePath) {
-            console.log("Keeping existing image:", existingImagePath);
             formData.append("imagePath", existingImagePath);
           }
         } else {
@@ -175,19 +161,6 @@ export default function EditIngredient() {
       });
 
       // Debug: Log FormData contents safely
-      console.log("FormData contents:");
-      for (let pair of formData.entries()) {
-        if (pair[0] === "image" || pair[0] === "imagePath") {
-          const file = pair[1];
-          if (file && typeof file === "object" && file instanceof File) {
-            console.log(pair[0] + ": " + (file.name || "unnamed file"));
-          } else {
-            console.log(pair[0] + ": " + String(file));
-          }
-        } else {
-          console.log(pair[0] + ": " + pair[1]);
-        }
-      }
 
       updateMutation.mutate({ formData });
     },
@@ -205,10 +178,6 @@ export default function EditIngredient() {
         if (Ingredient.image && typeof Ingredient.image === "object") {
           // Handle case where image is an object with filename property
           if (Ingredient.image.filename) {
-            console.log(
-              "Setting up existing image:",
-              Ingredient.image.filename
-            );
             imageExists = true;
             imagePath = Ingredient.image.filename;
           }
@@ -217,7 +186,7 @@ export default function EditIngredient() {
           Ingredient.image.trim() !== ""
         ) {
           // Handle case where image is just a string path
-          console.log("Setting up existing image:", Ingredient.image);
+
           imageExists = true;
           imagePath = Ingredient.image;
         }
@@ -239,7 +208,6 @@ export default function EditIngredient() {
             image: "EXISTING_IMAGE_PLACEHOLDER", // Use placeholder for existing images
           });
         } else {
-          console.log("No existing image found");
           setHasExistingImage(false);
           setExistingImagePath(null);
           setOriginalImageUrl(null);
@@ -266,7 +234,6 @@ export default function EditIngredient() {
   useEffect(() => {
     // Re-validate the form when image state changes
     if (formik.values.image !== undefined) {
-      console.log("Re-validating form due to image state change");
       formik.validateForm();
     }
   }, [hasExistingImage, hasNewImage, formik.values.image]);
@@ -276,7 +243,6 @@ export default function EditIngredient() {
     mutationKey: ["update-ingredient"],
     mutationFn: ({ formData }) => updateIngredient(id, formData, token),
     onSuccess: (data) => {
-      console.log("Update successful:", data);
       toast.success("Ingredient updated successfully");
       navigate("/managment");
     },
@@ -301,8 +267,6 @@ export default function EditIngredient() {
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (file && file instanceof File) {
-      console.log("New image selected:", file.name || "unnamed file");
-
       // Validate file type
       const validTypes = [
         "image/jpeg",
@@ -332,7 +296,6 @@ export default function EditIngredient() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
-        console.log("Image preview updated with new image");
       };
       reader.onerror = () => {
         toast.error("Failed to read the image file");
@@ -346,23 +309,14 @@ export default function EditIngredient() {
 
   // FIXED: Handle removing image with proper state management
   const handleRemoveImage = () => {
-    console.log(
-      "Removing image - hasNewImage:",
-      hasNewImage,
-      "hasExistingImage:",
-      hasExistingImage
-    );
-
     if (hasNewImage) {
       // If user uploaded a new image, remove it and go back to original
       if (hasExistingImage && originalImageUrl) {
         setImagePreview(originalImageUrl);
         formik.setFieldValue("image", "EXISTING_IMAGE_PLACEHOLDER");
-        console.log("Removed new image, reverting to original");
       } else {
         setImagePreview(null);
         formik.setFieldValue("image", null);
-        console.log("Removed new image, no original to revert to");
       }
       setHasNewImage(false);
     } else if (hasExistingImage) {
@@ -373,7 +327,6 @@ export default function EditIngredient() {
       setExistingImagePath(null);
       formik.setFieldValue("image", null);
       setHasNewImage(false);
-      console.log("Removed original image");
     }
 
     // Reset file input safely

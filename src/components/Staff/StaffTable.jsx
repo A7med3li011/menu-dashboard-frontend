@@ -27,17 +27,14 @@ export default function StaffTable({ list }) {
   const token = useSelector((store) => store.user.token);
 
   const handleView = (staff) => {
-    console.log("View staff:", staff);
     // Add your view logic here
   };
 
   const handleEdit = (staff) => {
-    console.log("Edit staff:", staff);
     // Add your edit logic here
   };
 
   const handleDelete = (staff) => {
-    console.log("Delete staff:", staff);
     // Add your delete logic here
   };
 

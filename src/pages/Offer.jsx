@@ -77,7 +77,6 @@ const OfferDetailsModal = ({
 
         {/* Debug log for items */}
         {(() => {
-          console.log("OfferDetailsModal items:", offerDetails?.items);
           return null;
         })()}
 
@@ -489,7 +488,7 @@ const Offer = () => {
     try {
       setLoading(true);
       const response = await getOffers(token);
-      console.log("Offers API response:", response); // Debug log
+
       // Handle different response structures
       let offersData = [];
       if (response?.data && Array.isArray(response.data)) {
@@ -659,23 +658,13 @@ const Offer = () => {
         return;
       }
 
-      console.log(
-        "Toggling offer status for:",
-        id,
-        "Current status:",
-        offer.isActive
-      );
-      console.log("Using token:", token?.substring(0, 20) + "...");
-
       let response;
       if (offer.isActive) {
         // Deactivate the offer
         response = await deActiveOffer(id, token);
-        console.log("Deactivate response:", response);
       } else {
         // Activate the offer
         response = await activeOffer(id, token);
-        console.log("Activate response:", response);
       }
 
       // Update local state and re-map items to product objects

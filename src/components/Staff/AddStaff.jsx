@@ -57,7 +57,6 @@ export default function AddStaff() {
     },
     validationSchema: staffSchema,
     onSubmit: (values) => {
-      console.log("Form submitted:", values);
       mutate(values);
     },
   });

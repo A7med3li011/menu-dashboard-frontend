@@ -30,8 +30,6 @@ const OrderTracking = () => {
   const { state } = location;
   let { data } = state;
 
-  console.log(data);
-
   const handleCancelOrder = () => {
     setSelectedTable(null);
     setOrderConfirmed(false);

@@ -53,7 +53,6 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // console.log("Login data:", formData);
       await login_staff(formData)
         .then((res) => {
           toast.success(`welcome back,${res?.user?.name}`);

@@ -64,8 +64,6 @@ export default function EditStaff() {
     },
     validationSchema: staffSchema,
     onSubmit: (values) => {
-      console.log("Form submitted:", values);
-
       updateMutation.mutate({ id, values });
     },
   });

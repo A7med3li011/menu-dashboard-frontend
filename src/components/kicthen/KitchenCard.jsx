@@ -51,7 +51,7 @@ export default function KitchenCard({ data = mockData }) {
         });
       },
     },
-    console.log(data)
+   
   );
 
   if (!data.items.length) return null;

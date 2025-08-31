@@ -11,9 +11,7 @@ export default function Staff() {
     queryKey: ["get_staff"],
     queryFn: () => getStaff(token),
   });
-  if (!isLoading) {
-    console.log(staffList);
-  }
+
   return (
     <div className="py-4">
       <h3 className="text-2xl tracking-wider font-semibold mb-10">

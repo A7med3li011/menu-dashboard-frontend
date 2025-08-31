@@ -99,7 +99,6 @@ export default function EditProduct() {
             ? values[key]
             : [];
           formData.append(key, JSON.stringify(ingredientsArray));
-          console.log("Ingredients being sent:", ingredientsArray);
         } else if (key === "image") {
           // Only append image if a new one was selected and it's a valid File object
           if (hasNewImage && values[key] && values[key] instanceof File) {
@@ -115,21 +114,6 @@ export default function EditProduct() {
       });
 
       // Debug: Log FormData contents safely
-      console.log("FormData contents:");
-      for (let pair of formData.entries()) {
-        if (pair[0] === "ingredients") {
-          console.log(pair[0] + ": " + pair[1]);
-        } else if (pair[0] === "image" || pair[0] === "imagePath") {
-          const file = pair[1];
-          if (file && typeof file === "object" && file instanceof File) {
-            console.log(pair[0] + ": " + (file.name || "unnamed file"));
-          } else {
-            console.log(pair[0] + ": " + String(file));
-          }
-        } else {
-          console.log(pair[0] + ": " + pair[1]);
-        }
-      }
 
       updateMutation.mutate({ id, formData });
     },
@@ -151,9 +135,7 @@ export default function EditProduct() {
     queryKey: ["subcategories", formik.values.category],
     queryFn: () => getsubCategoryByCategorie(formik.values.category, token),
     enabled: Boolean(formik.values.category),
-    onSuccess: (data) => {
-      console.log("Subcategories fetched successfully:", data);
-    },
+
     onError: (error) => {
       console.error("Error fetching subcategories:", error);
     },
@@ -168,9 +150,7 @@ export default function EditProduct() {
     queryKey: ["product", id],
     queryFn: () => getProductById(id, token),
     enabled: isEdit && !!id,
-    onSuccess: (data) => {
-      console.log("Product fetched successfully:", data);
-    },
+
     onError: (error) => {
       console.error("Error fetching product:", error);
     },
@@ -181,9 +161,6 @@ export default function EditProduct() {
     if (productData && isEdit) {
       try {
         const product = productData.data || productData;
-
-        console.log("Product data received:", product);
-        console.log("Raw ingredients from API:", product.ingredients);
 
         let ingredients = [];
         if (product.ingredients) {
@@ -227,7 +204,6 @@ export default function EditProduct() {
         if (product.image && typeof product.image === "object") {
           // Handle case where image is an object with filename property
           if (product.image.filename) {
-            console.log("Setting up existing image:", product.image.filename);
             setHasExistingImage(true);
             setExistingImagePath(product.image.filename);
             const fullImageUrl = `${imageBase}${product.image.filename}`;
@@ -238,7 +214,7 @@ export default function EditProduct() {
           }
         } else if (typeof product.image === "string") {
           // Handle case where image is just a string path
-          console.log("Setting up existing image:", product.image);
+
           setHasExistingImage(true);
           setExistingImagePath(product.image);
           const fullImageUrl = `${imageBase}${product.image}`;
@@ -247,7 +223,6 @@ export default function EditProduct() {
           setHasNewImage(false);
           formik.setFieldValue("image", "EXISTING_IMAGE_PLACEHOLDER");
         } else {
-          console.log("No existing image found");
           setHasExistingImage(false);
           setExistingImagePath(null);
           setOriginalImageUrl(null);
@@ -266,17 +241,6 @@ export default function EditProduct() {
           kitchen: product.kitchen?._id || "",
           ingredients: ingredients,
           image: product.image ? "EXISTING_IMAGE_PLACEHOLDER" : null,
-        });
-
-        console.log("Form populated with values:", {
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          category: product.category?._id,
-          subCategory: product.subCategory?._id,
-          kitchen: product.kitchen?._id,
-          ingredients: ingredients,
-          hasExistingImage: !!product.image,
         });
       } catch (error) {
         console.error("Error populating form with product data:", error);
@@ -311,8 +275,6 @@ export default function EditProduct() {
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (file && file instanceof File) {
-      console.log("New image selected:", file.name || "unnamed file");
-
       // Validate file type
       const validTypes = [
         "image/jpeg",
@@ -354,13 +316,6 @@ export default function EditProduct() {
 
   // Handle removing image
   const handleRemoveImage = () => {
-    console.log(
-      "Removing image - hasNewImage:",
-      hasNewImage,
-      "hasExistingImage:",
-      hasExistingImage
-    );
-
     if (hasNewImage) {
       // If user uploaded a new image, remove it and go back to original
       if (hasExistingImage && originalImageUrl) {
@@ -371,7 +326,6 @@ export default function EditProduct() {
         formik.setFieldValue("image", null);
       }
       setHasNewImage(false);
-      console.log("Removed new image, reverting to original");
     } else if (hasExistingImage) {
       // If removing original image, clear everything
       setImagePreview(null);
@@ -380,7 +334,6 @@ export default function EditProduct() {
       setExistingImagePath(null);
       formik.setFieldValue("image", null);
       setHasNewImage(false);
-      console.log("Removed original image");
     }
 
     // Reset file input safely
@@ -445,11 +398,6 @@ export default function EditProduct() {
       </div>
     );
   }
-
-  console.log("Current form values:", formik.values);
-  console.log("Has new image:", hasNewImage);
-  console.log("Original image URL:", originalImageUrl);
-  console.log("Image preview:", imagePreview);
 
   return (
     <div className="min-h-screen bg-primary p-6">

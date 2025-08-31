@@ -235,7 +235,6 @@ export default function Tables() {
                           id: table._id,
                           data: { status: "Available" },
                         });
-                        console.log("Toggle status for:", table._id);
                       }}
                     >
                       {table.status === "Available" ? "Reserve" : "Free"}

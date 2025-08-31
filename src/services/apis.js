@@ -1,8 +1,8 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
 export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
+export const baseUrl = `http://localhost:3001/api/v1`;
 // export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
@@ -45,7 +45,6 @@ export async function get_staff_by_id(id, token) {
   return data;
 }
 export async function update_staff_by_id(id, payload, token) {
-  console.log(payload);
   const { data } = await axios.put(
     `${baseUrl}/auth/updateStaff/${id}`,
     payload.values,
@@ -72,7 +71,6 @@ export async function delete_staff_by_id(id, token) {
   return data;
 }
 export async function add_kitchen(body, token) {
-  console.log(body);
   const { data } = await axios.post(`${baseUrl}/kitchen`, body, {
     headers: {
       token: `${token}`,

@@ -190,8 +190,6 @@ export default function OrdersPhone() {
 
   // Print bill functionality with logo
   const handlePrintBill = async (order) => {
-    console.log(order);
-
     // Convert logo to Base64
     let logoBase64 = "";
     try {

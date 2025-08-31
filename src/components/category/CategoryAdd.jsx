@@ -63,10 +63,6 @@ export default function CategoryAdd() {
       mutate(formData);
 
       // Simulate API call - replace with your actual API endpoint
-      console.log("Submitting category:", {
-        title: values.title,
-        image: values.image.name,
-      });
 
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 1000));

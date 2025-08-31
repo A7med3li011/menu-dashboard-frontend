@@ -76,7 +76,6 @@ export default function EditCategory() {
       if (payload.exp) {
         const currentTime = Math.floor(Date.now() / 1000);
         if (payload.exp < currentTime) {
-          console.log("Token expired at:", new Date(payload.exp * 1000));
           throw new Error("Token has expired");
         }
       }
@@ -103,9 +102,7 @@ export default function EditCategory() {
     queryKey: ["category", id],
     queryFn: () => getCategory(id, token),
     enabled: isEdit && !!id,
-    onSuccess: (data) => {
-      console.log("Category fetched successfully:", data);
-    },
+
     onError: (error) => {
       console.error("Category fetching:", error);
     },
@@ -142,13 +139,6 @@ export default function EditCategory() {
       for (let pair of formData.entries()) {
         if (pair[0] === "image" || pair[0] === "imagePath") {
           const file = pair[1];
-          if (file && typeof file === "object" && file instanceof File) {
-            console.log(pair[0] + ": " + (file.name || "unnamed file"));
-          } else {
-            console.log(pair[0] + ": " + String(file));
-          }
-        } else {
-          console.log(pair[0] + ": " + pair[1]);
         }
       }
 

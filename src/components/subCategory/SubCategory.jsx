@@ -55,7 +55,6 @@ export default function SubCategory() {
     );
   }
 
-  // console.log(subcategoryList);
   return (
     <div className="space-y-8 mt-10">
       {/* Header Section */}

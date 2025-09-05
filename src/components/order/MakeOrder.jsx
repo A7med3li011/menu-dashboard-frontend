@@ -8,8 +8,8 @@ import {
   Edit2,
   Check,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   getproducts,
   imageBase,
@@ -17,6 +17,7 @@ import {
   createExtra,
   updateExtra,
   deleteExtra,
+  createOrder,
 } from "../../services/apis";
 import { useSelector } from "react-redux";
 import { useState } from "react";
@@ -34,6 +35,7 @@ export default function MakeOrder() {
   const [myData, setMydata] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showCart, setShowCart] = useState(false); // For mobile cart toggle
+
   const [customizations, setCustomizations] = useState({
     extras: [],
     removals: [],
@@ -45,6 +47,9 @@ export default function MakeOrder() {
   const [newExtra, setNewExtra] = useState({ name: "", price: "" });
 
   const token = useSelector((store) => store.user.token);
+
+  const location = useLocation();
+  const { state } = location;
 
   const fetchExtras = async (productId) => {
     try {
@@ -77,6 +82,15 @@ export default function MakeOrder() {
     ],
   });
 
+  const { mutate } = useMutation({
+    mutationKey: ["create-order"],
+    mutationFn: (payload) => createOrder(payload.data, token),
+    onSuccess: () => {
+      navigate("/orders-tables");
+      toast.success("order created successfully");
+    },
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ["get-all-products"],
     queryFn: async () => {
@@ -95,6 +109,10 @@ export default function MakeOrder() {
 
       setMydata(res);
     },
+    refetchOnWindowFocus: false, // ❌ don't refetch on window focus
+    refetchOnReconnect: false, // ❌ don't refetch when reconnecting
+    staleTime: 1000 * 60 * 60 * 3, // ✅ 3 hours fresh (3 * 60 * 60 * 1000)
+    cacheTime: 1000 * 60 * 60 * 3, // ✅ keep unused data in cache for 3 hours
   });
 
   // Reset customizations
@@ -740,11 +758,21 @@ export default function MakeOrder() {
               </div>
 
               <button
-                onClick={() =>
-                  navigate("/follow-order", {
-                    state: { data: cart },
-                  })
-                }
+                onClick={() => {
+                  let newOrder = {
+                    table: state.table,
+                    guestCount: state.guestCount,
+                    orderType: "dine-in",
+                  };
+                  newOrder.items = cart.map((ele) => ({
+                    product: ele._id,
+                    quantity: ele.quantity,
+                    notes: ele.notes,
+                    customizations: ele.customizations ?? {},
+                  }));
+                  mutate({ data: newOrder });
+                  setShowCart(false);
+                }}
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 xl:py-5 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-base xl:text-lg"
               >
                 Place Order ({cart.length}{" "}
@@ -937,9 +965,19 @@ export default function MakeOrder() {
                 <button
                   onClick={() => {
                     setShowCart(false);
-                    navigate("/follow-order", {
-                      state: { data: cart },
-                    });
+
+                    let newOrder = {
+                      table: state.table,
+                      guestCount: state.guestCount,
+                      orderType: "dine-in",
+                    };
+                    newOrder.items = cart.map((ele) => ({
+                      product: ele._id,
+                      quantity: ele.quantity,
+                      notes: ele.notes,
+                      customizations: ele.customizations ?? {},
+                    }));
+                    mutate({ data: newOrder });
                   }}
                   className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >

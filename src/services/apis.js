@@ -1,8 +1,8 @@
 import axios from "axios";
 
- export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+//  export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
 export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-//export const baseUrl = `http://localhost:3001/api/v1`;
+export const baseUrl = `http://localhost:3001/api/v1`;
 // export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
@@ -611,6 +611,14 @@ export async function getLocations(token) {
 
 export async function updateLocation(id, body, token) {
   const { data } = await axios.put(`${baseUrl}/location/${id}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function mergeOrderFunction(body, token) {
+  const { data } = await axios.post(`${baseUrl}/order/merge`, body, {
     headers: {
       token: `${token}`,
     },

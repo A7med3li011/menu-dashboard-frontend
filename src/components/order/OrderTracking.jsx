@@ -8,7 +8,7 @@ import {
   DollarSign,
   Loader2,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createOrder, getTables, imageBase } from "../../services/apis";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -18,6 +18,9 @@ const OrderTracking = () => {
   const [selectedTable, setSelectedTable] = useState(null);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showGuestPopup, setShowGuestPopup] = useState(false);
+  const [guestCount, setGuestCount] = useState(1);
+  const [tempTableId, setTempTableId] = useState(null);
 
   const navigate = useNavigate("");
   const token = useSelector((store) => store.user.token);
@@ -26,9 +29,9 @@ const OrderTracking = () => {
     queryFn: () => getTables(token),
   });
 
-  const location = useLocation();
-  const { state } = location;
-  let { data } = state;
+  // const location = useLocation();
+  // // const { state } = location;
+  // let { data } = state;
 
   const handleCancelOrder = () => {
     setSelectedTable(null);
@@ -36,30 +39,42 @@ const OrderTracking = () => {
     navigate("/make-order");
   };
 
-  let newOrder = {
-    orderType: "dine-in",
+  const handleTableClick = (table) => {
+    if (table.status !== "Available") {
+      toast.error(`Table is ${table.status}`);
+      return;
+    }
+    setTempTableId(table._id);
+    setShowGuestPopup(true);
   };
-  if (selectedTable) {
-    newOrder.table = selectedTable;
-  }
-  if (data.length) {
-    newOrder.items = data.map((ele) => ({
-      product: ele._id,
-      quantity: ele.quantity,
-      notes: ele.notes,
-      customizations: ele.customizations ?? {},
-    }));
-  }
 
-  const { mutate } = useMutation({
-    mutationKey: ["create-order"],
-    mutationFn: (payload) => createOrder(payload.data, token),
-    onSuccess: () => {
-      navigate("/orders-tables");
-      toast.success("order created successfully");
-      data = [];
-    },
-  });
+  const handleGuestConfirm = () => {
+    setSelectedTable(tempTableId);
+    setShowGuestPopup(false);
+    setTempTableId(null);
+  };
+
+  const handleGuestCancel = () => {
+    setShowGuestPopup(false);
+    setTempTableId(null);
+    setGuestCount(1);
+  };
+
+  // let newOrder = {
+  //   orderType: "dine-in",
+  //   guestCount: guestCount,
+  // };
+  // if (selectedTable) {
+  //   newOrder.table = selectedTable;
+  // }
+  // if (data.length) {
+  //   newOrder.items = data.map((ele) => ({
+  //     product: ele._id,
+  //     quantity: ele.quantity,
+  //     notes: ele.notes,
+  //     customizations: ele.customizations ?? {},
+  //   }));
+  // }
 
   if (orderConfirmed) {
     return (
@@ -91,13 +106,60 @@ const OrderTracking = () => {
     );
   }
 
-  const totalPrice = data.reduce(
-    (acc, item) => acc + +item.price * +item.quantity,
-    0
-  );
-
   return (
     <div className="min-h-screen bg-secondary">
+      {/* Guest Count Popup */}
+      {showGuestPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-sm w-full">
+            <div className="text-center mb-6">
+              <Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                Number of Guests
+              </h3>
+              <p className="text-gray-600 text-sm">
+                How many people will be dining at this table?
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center justify-center space-x-4">
+                <button
+                  onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
+                  className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                >
+                  <span className="text-lg font-bold">-</span>
+                </button>
+                <div className="text-3xl font-bold text-gray-800 min-w-[3rem] text-center">
+                  {guestCount}
+                </div>
+                <button
+                  onClick={() => setGuestCount(guestCount + 1)}
+                  className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                >
+                  <span className="text-lg font-bold">+</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleGuestCancel}
+                className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGuestConfirm}
+                className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="max-w-7xl mx-auto">
@@ -113,88 +175,17 @@ const OrderTracking = () => {
 
           {/* Main Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
-            {/* Order Summary */}
-            {/* <div className="order-2 xl:order-1 rounded-xl shadow-lg p-4 sm:p-6 bg-secondary border border-popular">
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
-                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-green-600" />
-                Order Summary
-              </h2>
-
-             
-              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6 max-h-64 sm:max-h-80 overflow-y-auto">
-                {data?.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start sm:items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg border border-gray-200"
-                  >
-                    <img
-                      src={`${imageBase}/${item.image}`}
-                      alt={item.name}
-                      className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-sm sm:text-base truncate">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-white">
-                        Quantity: {item.quantity}
-                      </p>
-                      {item.customizations?.extras?.length > 0 && (
-                        <p className="text-xs text-orange-600 mt-1 truncate">
-                          +{item.customizations.extras.join(", ")}
-                        </p>
-                      )}
-                      {item.customizations?.removal?.length > 0 && (
-                        <p className="text-xs text-orange-600 mt-1 truncate">
-                          -{item.customizations.removal.join(", ")}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-white text-sm sm:text-base">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-             
-              <div className="border-t border-gray-200 pt-4 space-y-2">
-                <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-white">Subtotal:</span>
-                  <span className="font-medium text-white">
-                    ${totalPrice.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-white">VAT (20%):</span>
-                  <span className="font-medium text-white">
-                    ${(totalPrice * 0.2).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-base sm:text-lg font-bold border-t border-gray-200 pt-2">
-                  <span className="text-white">Total:</span>
-                  <span className="text-green-600">
-                    ${(totalPrice * 1.2).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-            
-              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-blue-50 rounded-lg flex items-center">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mr-2 flex-shrink-0" />
-                <span className="text-blue-800 text-xs sm:text-sm">
-                  Estimated preparation time: 15-20 min
-                </span>
-              </div>
-            </div>*/}
-
             {/* Table Selection */}
             <div className="order-1 xl:order-2 bg-secondary border border-popular rounded-xl shadow-lg p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
                 <MapPin className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
                 Select Table
+                {selectedTable && (
+                  <span className="ml-auto text-sm bg-green-500 text-white px-3 py-1 rounded-full flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    {guestCount} guest{guestCount !== 1 ? "s" : ""}
+                  </span>
+                )}
               </h2>
 
               {/* Legend */}
@@ -226,14 +217,7 @@ const OrderTracking = () => {
                   {tableList?.data?.map((table, index) => (
                     <div
                       key={index}
-                      onClick={() => {
-                        if (table.status !== "Available") {
-                          toast.error(`Table is ${table.status}`);
-                          return;
-                        } else {
-                          setSelectedTable(table._id);
-                        }
-                      }}
+                      onClick={() => handleTableClick(table)}
                       className={`relative aspect-square transition-all duration-300 ${
                         selectedTable === table._id
                           ? "transform scale-105 z-10"
@@ -279,12 +263,20 @@ const OrderTracking = () => {
             </button>
 
             <button
-              onClick={async () => {
-                setIsLoading(true);
-                await mutate({ data: newOrder });
-                setIsLoading(false);
+              onClick={() => {
+                if (!selectedTable) {
+                  return toast.warn("please select table");
+                }
+                if (!guestCount) {
+                  return toast.warn("please select count of guests");
+                }
+                navigate("/make-order", {
+                  state: {
+                    table: selectedTable,
+                    guestCount: guestCount,
+                  },
+                });
               }}
-              disabled={isLoading}
               // disabled={!selectedTable}
               className={`order-1 sm:order-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base ${
                 selectedTable

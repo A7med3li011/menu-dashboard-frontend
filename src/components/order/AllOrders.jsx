@@ -5,6 +5,7 @@ import { getAllOrders, updateItems, updateOrder } from "../../services/apis";
 import logo from "../../assets/logo.png";
 import { useSelector } from "react-redux";
 import { TableOfContents, Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AllOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -12,6 +13,7 @@ export default function AllOrders() {
   const [searchInstance, setSearchInstance] = useState();
   const [filter, setFilter] = useState("all");
 
+  const navigate = useNavigate();
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -651,6 +653,19 @@ export default function AllOrders() {
                           Cancel
                         </button>
                       )}
+                      {order.status != "cancelled" &&
+                        order.status != "checkout" && (
+                          <button
+                            onClick={() => {
+                              navigate("/merge-order", {
+                                state: { order: order },
+                              });
+                            }}
+                            className="text-blue-500 font-medium"
+                          >
+                            Merge
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>

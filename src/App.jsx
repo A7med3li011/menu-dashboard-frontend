@@ -36,6 +36,7 @@ import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 import Section from "./pages/Section";
 import TablesBySection from "./pages/TablesBySection";
 import Location from "./pages/Location";
+import MergePage from "./pages/MergePage";
 
 function App() {
   const router = createBrowserRouter([
@@ -260,6 +261,14 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
               <MakeOrder />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/merge-order",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
+              <MergePage />
             </RoleBasedRoute>
           ),
         },

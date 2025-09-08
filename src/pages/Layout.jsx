@@ -11,7 +11,7 @@ export default function Layout() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 text-white pt-12 px-10 max-w-3xl lg:max-w-7xl  overflow-x-auto mx-auto pb-10">
+      <main className="flex-1 text-white pt-12 px-10 max-w-3xl lg:max-w-7xl min-h-screen no-scrollbar h-[1200px] hide-scrollbar  overflow-y-auto  overflow-x-auto mx-auto pb-10">
         <Outlet />
       </main>
     </div>

@@ -625,3 +625,12 @@ export async function mergeOrderFunction(body, token) {
   });
   return data;
 }
+export async function checkoutOrder(body, token, id) {
+  console.log(body);
+  const { data } = await axios.put(`${baseUrl}/order/checkout/${id}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}

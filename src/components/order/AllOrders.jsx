@@ -6,6 +6,7 @@ import logo from "../../assets/logo.png";
 import { useSelector } from "react-redux";
 import { TableOfContents, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function AllOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -68,6 +69,9 @@ export default function AllOrders() {
     mutationFn: (payload) => {
       // call your update function here
       return updateItems(selectedOrder._id, token, payload.items);
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -640,19 +644,20 @@ export default function AllOrders() {
                       >
                         Print
                       </button>
-                      {order.status != "cancelled" && (
-                        <button
-                          onClick={() =>
-                            mutate({
-                              id: order._id,
-                              data: { status: "cancelled" },
-                            })
-                          }
-                          className="text-red-500 font-medium"
-                        >
-                          Cancel
-                        </button>
-                      )}
+                      {order.status != "cancelled" &&
+                        order.status != "checkout" && (
+                          <button
+                            onClick={() =>
+                              mutate({
+                                id: order._id,
+                                data: { status: "cancelled" },
+                              })
+                            }
+                            className="text-red-500 font-medium"
+                          >
+                            Cancel
+                          </button>
+                        )}
                       {order.status != "cancelled" &&
                         order.status != "checkout" && (
                           <button
@@ -666,6 +671,19 @@ export default function AllOrders() {
                             Merge
                           </button>
                         )}
+
+                      {order.status == "completed" && (
+                        <button
+                          onClick={() => {
+                            navigate("/checkout", {
+                              state: { order: order },
+                            });
+                          }}
+                          className="text-green-400 font-medium"
+                        >
+                          checkout
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

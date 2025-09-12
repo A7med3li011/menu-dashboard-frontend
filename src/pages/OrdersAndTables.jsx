@@ -17,7 +17,6 @@ export default function OrdersAndTables() {
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-wider ml-4 flex  items-center justify-between w-full">
           <div>Orders Items</div>
           <button
-            // onClick={() => navigate("/make-order")}
             onClick={() => navigate("/follow-order")}
             className="text-base font-semibold bg-popular text-white rounded-md px-4 py-2 transition-colors"
           >

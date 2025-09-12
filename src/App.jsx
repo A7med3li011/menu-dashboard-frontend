@@ -37,6 +37,7 @@ import Section from "./pages/Section";
 import TablesBySection from "./pages/TablesBySection";
 import Location from "./pages/Location";
 import MergePage from "./pages/MergePage";
+import Checkout from "./components/order/Checkout";
 
 function App() {
   const router = createBrowserRouter([
@@ -261,6 +262,14 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
               <MakeOrder />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/checkout",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
+              <Checkout />
             </RoleBasedRoute>
           ),
         },

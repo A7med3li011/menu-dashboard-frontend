@@ -59,3 +59,9 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */
 }
+
+.react-autosuggest__suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

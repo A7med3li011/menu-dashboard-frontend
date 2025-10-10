@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
-export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
-// export const imageBase = `http://localhost:3001/uploads/`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+export const baseUrl = `http://localhost:3001/api/v1`;
+export const imageBase = `http://localhost:3001/uploads/`;
 
 export async function login_staff(body) {
   const { data } = await axios.post(`${baseUrl}/auth/login`, body, {});
@@ -632,5 +632,145 @@ export async function checkoutOrder(body, token, id) {
       token: `${token}`,
     },
   });
+  return data;
+}
+export async function getSuppliers(token) {
+  const { data } = await axios.get(`${baseUrl}/supplier`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function getSupplierbyId(token, id) {
+  const { data } = await axios.get(`${baseUrl}/supplier/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function createSupplier(token, body) {
+  const { data } = await axios.post(`${baseUrl}/supplier`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function updateSupplier(token, body, id) {
+  const { data } = await axios.put(`${baseUrl}/supplier/${id}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function updateSupplierStatus(token, body, id) {
+  const { data } = await axios.patch(`${baseUrl}/supplier/${id}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function addinventory(token, body) {
+  const { data } = await axios.post(`${baseUrl}/inventory/`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function getInventory(token) {
+  const { data } = await axios.get(`${baseUrl}/inventory/`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function updateInventory(token, body, id) {
+  const { data } = await axios.put(`${baseUrl}/inventory/${id}`, body, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function deleteInventory(token, id) {
+  const { data } = await axios.delete(`${baseUrl}/inventory/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+export async function InventoryItems(token, search) {
+  const { data } = await axios.get(
+    `${baseUrl}/inventory/items?search=${search}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+export async function createPurchase(token, body) {
+  const { data } = await axios.post(
+    `${baseUrl}/purchase/`,body,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+export async function getsupplierBills(token,supplierId) {
+  const { data } = await axios.get(
+    `${baseUrl}/purchase/supplier/${supplierId}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+export async function getpurchasebyId(token,id) {
+  const { data } = await axios.get(
+    `${baseUrl}/purchase/${id}`,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+export async function updatePurchase(token,id,body) {
+  const { data } = await axios.put(
+    `${baseUrl}/purchase/${id}`,
+    body,
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+export async function exportToinventory(token,id) {
+  const { data } = await axios.put(
+    `${baseUrl}/purchase/export/${id}`,
+  {},
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
   return data;
 }

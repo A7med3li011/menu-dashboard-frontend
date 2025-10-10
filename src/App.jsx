@@ -38,6 +38,13 @@ import TablesBySection from "./pages/TablesBySection";
 import Location from "./pages/Location";
 import MergePage from "./pages/MergePage";
 import Checkout from "./components/order/Checkout";
+import Supplier from "./pages/Supplier";
+import AddSupplier from "./pages/AddSupplier";
+import UpdateSupplier from "./pages/UpdateSupplier";
+import Purchase from "./pages/Purchase";
+import CreatePuchase from "./pages/CreatePuchase";
+import PurchaseView from "./pages/PurchaseView";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -180,8 +187,32 @@ function App() {
         {
           path: "/inventory",
           element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+            <RoleBasedRoute allowedRoles={["admin"]}>
               <Inventory />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/create-purchase/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <CreatePuchase />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/purchase/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Purchase />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/purchase/view/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <PurchaseView />
             </RoleBasedRoute>
           ),
         },
@@ -262,6 +293,31 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
               <MakeOrder />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/supplier",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Supplier />
+            </RoleBasedRoute>
+          ),
+        },
+        
+        {
+          path: "/add-supplier",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <AddSupplier />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/update-supplier/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <UpdateSupplier />
             </RoleBasedRoute>
           ),
         },

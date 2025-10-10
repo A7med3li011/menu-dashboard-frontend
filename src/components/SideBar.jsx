@@ -2,7 +2,7 @@ import logo from "../assets/logo.png";
 import dashboardicon from "../assets/dashboard-fill.png";
 import peopleIcon from "../assets/people-fill.png";
 // import menuIcom from "../assets/files.png";
-// import inventoryIcon from "../assets/inevntory.png";
+import inventoryIcon from "../assets/inevntory.png";
 import offerIcon from "../assets/discount.png";
 import locationIcon from "../assets/location-pointer.png";
 import reportIcon from "../assets/sheet.png";
@@ -17,7 +17,6 @@ export default function SideBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector((store) => store.user.user);
-
 
   const routes = [
     {
@@ -90,6 +89,18 @@ export default function SideBar() {
       icon: locationIcon,
       link: "/location",
       access: ["admin", "staff", "operation"],
+    },
+    {
+      title: "suppliers",
+      icon: inventoryIcon,
+      link: "/supplier",
+      access: ["admin"],
+    },
+    {
+      title: "inventory",
+      icon: inventoryIcon,
+      link: "/inventory",
+      access: ["admin"],
     },
   ];
 

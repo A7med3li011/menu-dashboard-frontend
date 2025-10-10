@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     email: "",
@@ -53,6 +54,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      setLoading(true);
       await login_staff(formData)
         .then((res) => {
           toast.success(`welcome back,${res?.user?.name}`);
@@ -61,7 +63,8 @@ export default function Login() {
           navigate("/");
         })
 
-        .catch((err) => toast.error(err?.response?.data?.message));
+        .catch((err) => toast.error(err?.response?.data?.message))
+        .finally(setLoading(false));
     }
   };
 
@@ -150,6 +153,7 @@ export default function Login() {
 
             {/* Submit Button */}
             <button
+              disabled={loading}
               type="button"
               onClick={handleSubmit}
               className="w-full py-3 px-4 rounded-lg font-semibold text-black transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"

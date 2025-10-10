@@ -20,6 +20,7 @@ export default function Checkout() {
   const { order } = state || {};
   const token = useSelector((store) => store.user.token);
 
+  console.log(order);
   // Check if order exists on mount
   useEffect(() => {
     if (!order) {
@@ -375,7 +376,10 @@ export default function Checkout() {
                       <input
                         type="number"
                         id="hybridVisaAmount"
-                        value={hybridVisaAmount}
+                        value={
+                          hybridVisaAmount ||
+                          (order?.totalPrice - hybridCashAmount).toFixed(2)
+                        }
                         onChange={(e) => setHybridVisaAmount(e.target.value)}
                         placeholder="Enter visa amount"
                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"

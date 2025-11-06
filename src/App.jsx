@@ -3,48 +3,36 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ProtectedRoutes from "./services/ProtectedRoutes";
 import ReverseProtectedRoutes from "./services/ReverseProtectedRoutes";
 import RoleBasedRoute from "./services/RoleBasedRoute";
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Layout from "./pages/Layout";
-import Inventory from "./pages/Inventory";
-import Kitchen from "./pages/Kitchen";
-import Menu from "./pages/Menu";
-import OrdersAndTables from "./pages/OrdersAndTables";
-import Staff from "./pages/Staff";
-import Reports from "./pages/Reports";
-import Reservation from "./pages/Reservation";
-import Managment from "./pages/Managment";
-import CategoryAdd from "./components/category/CategoryAdd";
-import SubCategoryAdd from "./components/subCategory/SubCategoryAdd";
-import DishAdd from "./components/dishes/DishAdd";
-import OrderTracking from "./components/order/OrderTracking";
-import AddStaff from "./components/Staff/AddStaff";
-import Editstaff from "./components/Staff/Editstaff";
-import EachKitchen from "./pages/EachKitchen";
-import MakeOrder from "./components/order/MakeOrder";
-import { Table } from "lucide-react";
-import Tables from "./pages/Tables";
 import NotFound from "./pages/NotFound";
-import EditProduct from "./components/dishes/EditProduct";
-import EditSubCategory from "./components/subCategory/EditSubCategory";
-import Offer from "./pages/Offer";
-import ViewSubCategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
-import IngredientAdd from "./components/ingredients/IngredientAdd";
-import EditIngredient from "./components/ingredients/EditIngredient";
+
+// Categories
+import Categories from "./pages/Categories";
+import CategoryAdd from "./components/category/CategoryAdd";
 import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
-import Section from "./pages/Section";
-import TablesBySection from "./pages/TablesBySection";
-import Location from "./pages/Location";
-import MergePage from "./pages/MergePage";
-import Checkout from "./components/order/Checkout";
-import Supplier from "./pages/Supplier";
-import AddSupplier from "./pages/AddSupplier";
-import UpdateSupplier from "./pages/UpdateSupplier";
-import Purchase from "./pages/Purchase";
-import CreatePuchase from "./pages/CreatePuchase";
-import PurchaseView from "./pages/PurchaseView";
 
+// SubCategories
+import SubCategories from "./pages/SubCategories";
+import SubCategoryAdd from "./components/subCategory/SubCategoryAdd";
+import EditSubCategory from "./components/subCategory/EditSubCategory";
+import ViewSubCategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
+
+// Products
+import Products from "./pages/Products";
+import DishAdd from "./components/dishes/DishAdd";
+import EditProduct from "./components/dishes/EditProduct";
+
+// Ingredients
+import IngredientAdd from "./components/ingredients/IngredientAdd";
+import EditIngredient from "./components/ingredients/EditIngredient";
+
+// Offers
+import Offer from "./pages/Offer";
+
+// Menu Display
+import MenuDisplay from "./pages/MenuDisplay";
 
 function App() {
   const router = createBrowserRouter([
@@ -64,311 +52,149 @@ function App() {
         </ProtectedRoutes>
       ),
       children: [
+        // Redirect root to categories
         {
-          path: "/Dashboard",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <Dashboard />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/add-ingredient",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <IngredientAdd />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/staff",
+          path: "/",
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <Staff />
+              <Categories />
             </RoleBasedRoute>
           ),
         },
+
+        // Categories Routes
         {
-          path: "/add-staff",
+          path: "/categories",
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <AddStaff />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/product/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <EditProduct />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/subcategory/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <EditSubCategory />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/ingredients/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <EditIngredient />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/category/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <EditCategory />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/subcategoryDetails/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <ViewSubCategoryDetails />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/categoryDetails/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <ViewCategoryDetails />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/edit-staff/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <Editstaff />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/service",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <Managment />
+              <Categories />
             </RoleBasedRoute>
           ),
         },
         {
           path: "/add-category",
           element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+            <RoleBasedRoute allowedRoles={["admin"]}>
               <CategoryAdd />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/category/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <EditCategory />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/categoryDetails/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <ViewCategoryDetails />
+            </RoleBasedRoute>
+          ),
+        },
+
+        // SubCategories Routes
+        {
+          path: "/subcategories",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <SubCategories />
             </RoleBasedRoute>
           ),
         },
         {
           path: "/add-sub-category",
           element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+            <RoleBasedRoute allowedRoles={["admin"]}>
               <SubCategoryAdd />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/subcategory/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <EditSubCategory />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/subcategoryDetails/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <ViewSubCategoryDetails />
+            </RoleBasedRoute>
+          ),
+        },
+
+        // Products Routes
+        {
+          path: "/products",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Products />
             </RoleBasedRoute>
           ),
         },
         {
           path: "/add-dish",
           element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+            <RoleBasedRoute allowedRoles={["admin"]}>
               <DishAdd />
             </RoleBasedRoute>
           ),
         },
         {
-          path: "/inventory",
+          path: "/product/:id",
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <Inventory />
+              <EditProduct />
             </RoleBasedRoute>
           ),
         },
+
+        // Ingredients Routes
         {
-          path: "/create-purchase/:id",
+          path: "/add-ingredient",
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <CreatePuchase />
+              <IngredientAdd />
             </RoleBasedRoute>
           ),
         },
         {
-          path: "/purchase/:id",
+          path: "/ingredients/:id",
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <Purchase />
+              <EditIngredient />
             </RoleBasedRoute>
           ),
         },
-        {
-          path: "/purchase/view/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <PurchaseView />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/kitchen",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
-              <Kitchen />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/section",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
-              <Section />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/location",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
-              <Location />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/section-tables/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
-              <TablesBySection />
-            </RoleBasedRoute>
-          ),
-        },
+
+        // Offers Routes
         {
           path: "/offer",
           element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
+            <RoleBasedRoute allowedRoles={["admin"]}>
               <Offer />
             </RoleBasedRoute>
           ),
         },
-        {
-          path: "/kitchen/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "staff", "operation"]}>
-              <EachKitchen />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/follow-order",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
-              <OrderTracking />
-            </RoleBasedRoute>
-          ),
-        },
+
+        // Menu Display
         {
           path: "/menu",
           element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <Menu />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/orders-tables",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
-              <OrdersAndTables />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/make-order",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
-              <MakeOrder />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/supplier",
-          element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <Supplier />
+              <MenuDisplay />
             </RoleBasedRoute>
           ),
         },
-        
-        {
-          path: "/add-supplier",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <AddSupplier />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/update-supplier/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <UpdateSupplier />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/checkout",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
-              <Checkout />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/merge-order",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
-              <MergePage />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/table",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation", "waiter"]}>
-              <Tables />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/reports",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <Reports />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/reservation",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <Reservation />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/managment",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin", "operation"]}>
-              <Managment />
-            </RoleBasedRoute>
-          ),
-        },
+
+        // 404 Not Found
         { path: "*", element: <NotFound /> },
       ],
     },

@@ -6,7 +6,6 @@ import {
   updateProduct,
   getCategories,
   getsubCategoryByCategorie,
-  get_kitchens,
   imageBase,
 } from "../../services/apis";
 import { useNavigate, useParams } from "react-router-dom";
@@ -32,7 +31,6 @@ const createProductSchema = (isEdit, hasExistingImage) =>
       .min(0.01, "Price must be at least $0.01"),
     category: Yup.string().required("Category is required"),
     subCategory: Yup.string().required("Sub-category is required"),
-    kitchen: Yup.string().required("Kitchen is required"),
     ingredients: Yup.array()
       .min(1, "At least one ingredient must be added")
       .required("Ingredients are required"),
@@ -83,7 +81,6 @@ export default function EditProduct() {
       price: "",
       category: "",
       subCategory: "",
-      kitchen: "",
       ingredients: [],
       image: null,
     },
@@ -123,12 +120,6 @@ export default function EditProduct() {
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(token),
-  });
-
-  // Fetch kitchens
-  const { data: kitchensData } = useQuery({
-    queryKey: ["kitchens"],
-    queryFn: () => get_kitchens(token),
   });
 
   const { data: subCategoriesData } = useQuery({
@@ -238,7 +229,6 @@ export default function EditProduct() {
           price: product.price || "",
           category: product.category?._id || "",
           subCategory: product.subCategory?._id || "",
-          kitchen: product.kitchen?._id || "",
           ingredients: ingredients,
           image: product.image ? "EXISTING_IMAGE_PLACEHOLDER" : null,
         });
@@ -263,7 +253,7 @@ export default function EditProduct() {
     mutationFn: ({ id, formData }) => updateProduct(id, formData, token),
     onSuccess: () => {
       toast.success("Product updated successfully");
-      navigate("/managment");
+      navigate("/products");
     },
     onError: (error) => {
       console.error("Update error:", error);
@@ -639,42 +629,6 @@ export default function EditProduct() {
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Kitchen Field */}
-            <div>
-              <label
-                htmlFor="kitchen"
-                className="block text-white font-medium mb-2"
-              >
-                Kitchen
-              </label>
-              <select
-                id="kitchen"
-                name="kitchen"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.kitchen}
-                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
-                  formik.touched.kitchen && formik.errors.kitchen
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-              >
-                <option value="" disabled>
-                  Choose kitchen
-                </option>
-                {kitchensData?.map((kitchen) => (
-                  <option key={kitchen._id} value={kitchen._id}>
-                    {kitchen.name}
-                  </option>
-                ))}
-              </select>
-              {formik.touched.kitchen && formik.errors.kitchen && (
-                <p className="text-red-400 text-sm mt-1">
-                  {formik.errors.kitchen}
-                </p>
-              )}
             </div>
 
             {/* Ingredients Section */}

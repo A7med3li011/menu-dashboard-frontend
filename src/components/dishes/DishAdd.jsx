@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   createProduct,
-  get_kitchens,
   getCategories,
   getsubCategoryByCategorie,
 } from "../../services/apis";
@@ -26,7 +25,6 @@ const validationSchema = Yup.object({
     .trim(),
   category: Yup.string().required("Category is required"),
   subCategory: Yup.string().required("Sub category is required"),
-  kitchen: Yup.string().required("Kitchen is required"),
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive")
@@ -67,15 +65,6 @@ export default function DishAdd() {
 
   // Queries
   const token = useSelector((store) => store.user.token);
-  const {
-    data: KitchenList,
-    isLoading: kitchenLoading,
-    error: kitchenError,
-  } = useQuery({
-    queryKey: ["get-kitchens"],
-    queryFn: () => get_kitchens(token),
-    refetchOnWindowFocus: false,
-  });
 
   const {
     data: categoryList,
@@ -104,7 +93,7 @@ export default function DishAdd() {
     mutationFn: (payload) => createProduct(payload, token),
     onSuccess: (res) => {
       toast.success("Product added successfully!");
-      navigate("/managment");
+      navigate("/products");
     },
     onError: (error) => {
       console.error("Error adding dish:", error);
@@ -118,7 +107,6 @@ export default function DishAdd() {
       description: "",
       category: "",
       subCategory: "",
-      kitchen: "",
       price: "",
       ingredients: [""], // Start with one empty ingredient field
       image: null,
@@ -342,44 +330,6 @@ export default function DishAdd() {
               {formik.touched.subCategory && formik.errors.subCategory && (
                 <p className="text-red-500 text-sm mt-1">
                   {formik.errors.subCategory}
-                </p>
-              )}
-            </div>
-
-            {/* Kitchen */}
-            <div className="w-full">
-              <label className="block font-semibold mb-2">Kitchen *</label>
-              <select
-                name="kitchen"
-                value={formik.values.kitchen}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
-                  formik.touched.kitchen && formik.errors.kitchen
-                    ? "border-red-500"
-                    : "border-popular"
-                }`}
-              >
-                <option value="" className="bg-secondary">
-                  {kitchenLoading
-                    ? "Loading..."
-                    : kitchenError
-                    ? "Error loading kitchens"
-                    : "Select Kitchen"}
-                </option>
-                {KitchenList?.map((ele) => (
-                  <option
-                    key={ele._id}
-                    className="bg-secondary"
-                    value={ele._id}
-                  >
-                    {ele?.name}
-                  </option>
-                ))}
-              </select>
-              {formik.touched.kitchen && formik.errors.kitchen && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.kitchen}
                 </p>
               )}
             </div>

@@ -1,17 +1,9 @@
-import logo from "../assets/logo.png";
-import dashboardicon from "../assets/dashboard-fill.png";
-import peopleIcon from "../assets/people-fill.png";
-// import menuIcom from "../assets/files.png";
-import inventoryIcon from "../assets/inevntory.png";
+import logo from "../assets/final logo-03.png";
 import offerIcon from "../assets/discount.png";
-import locationIcon from "../assets/location-pointer.png";
-import reportIcon from "../assets/sheet.png";
-import tablesIcon from "../assets/icons8-order-food-100.png";
-import reservationIcon from "../assets/calendare.png";
-import kitchenIcon from "../assets/kitchen.png";
 import logoutIcon from "../assets/logout-outlined.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Menu, Layers, Package, BookOpen } from "lucide-react";
 
 export default function SideBar() {
   const navigate = useNavigate();
@@ -20,93 +12,40 @@ export default function SideBar() {
 
   const routes = [
     {
-      title: "Dashboard",
-      icon: dashboardicon,
-      link: "/dashboard",
-      access: ["admin", "operation"],
-    },
-
-    {
-      title: "Service Managment",
-      icon: reportIcon,
-      link: "/managment",
-      access: ["admin", "operation"],
-    },
-    // {
-    //   title: "Menu",
-    //   icon: menuIcom,
-    //   link: "/menu",
-    //   access: ["admin", "staff", "operation", "waiter"]
-    // },
-    {
-      title: "Staff",
-      icon: peopleIcon,
-      link: "/staff",
+      title: "Menu Display",
+      icon: "BookOpen",
+      link: "/menu",
       access: ["admin"],
     },
-    // {
-    //   title: "Inventory",
-    //   icon: inventoryIcon,
-    //   link: "/inventory",
-    // },
-    // {
-    //   title: "Reports",
-    //   icon: reportIcon,
-    //   link: "/reports",
-    // },
     {
-      title: "Tables/Orders",
-      icon: tablesIcon,
-      link: "/orders-tables",
-      access: ["admin", "operation", "waiter"],
+      title: "Categories",
+      icon: "Menu",
+      link: "/categories",
+      access: ["admin"],
     },
     {
-      title: "Tables",
-      icon: reservationIcon,
-      link: "/table",
-      access: ["admin", "operation", "waiter"],
+      title: "SubCategories",
+      icon: "Layers",
+      link: "/subcategories",
+      access: ["admin"],
     },
     {
-      title: "Sections",
-      icon: reservationIcon,
-      link: "/section",
-      access: ["admin", "operation"],
+      title: "Products",
+      icon: "Package",
+      link: "/products",
+      access: ["admin"],
     },
     {
-      title: "Kitchen",
-      icon: kitchenIcon,
-      link: "/kitchen",
-      access: ["admin", "staff", "operation"],
-    },
-    {
-      title: "offer",
+      title: "Offers",
       icon: offerIcon,
       link: "/offer",
-      access: ["admin", "staff", "operation"],
-    },
-    {
-      title: "location",
-      icon: locationIcon,
-      link: "/location",
-      access: ["admin", "staff", "operation"],
-    },
-    {
-      title: "suppliers",
-      icon: inventoryIcon,
-      link: "/supplier",
-      access: ["admin"],
-    },
-    {
-      title: "inventory",
-      icon: inventoryIcon,
-      link: "/inventory",
       access: ["admin"],
     },
   ];
 
   return (
     <div className="bg-secondary text-white px-4 pb-3 h-[1200px] overflow-hidden w-full flex flex-col">
-      <div className="">
+      <div className=" mb-5">
         <img className="w-full" src={logo} />
       </div>
 
@@ -120,15 +59,49 @@ export default function SideBar() {
                 key={index}
                 className="flex flex-col justify-center items-center cursor-pointer hover:bg-opacity-80 transition-all duration-200 py-2 mb-6"
               >
-                <img
-                  src={ele.icon}
-                  alt="icon"
-                  className={`mb-2 w-[30px] lg:w-[30px] transition-all duration-300 ease-in-out ${
-                    location.pathname === ele.link
-                      ? "filter brightness-0 invert"
-                      : ""
-                  }`}
-                />
+                {ele.icon === "BookOpen" ? (
+                  <BookOpen
+                    className={`mb-2 w-[30px] h-[30px] transition-all duration-300 ease-in-out ${
+                      location.pathname === ele.link
+                        ? "text-white"
+                        : "text-gray-400"
+                    }`}
+                  />
+                ) : ele.icon === "Menu" ? (
+                  <Menu
+                    className={`mb-2 w-[30px] h-[30px] transition-all duration-300 ease-in-out ${
+                      location.pathname === ele.link
+                        ? "text-white"
+                        : "text-gray-400"
+                    }`}
+                  />
+                ) : ele.icon === "Layers" ? (
+                  <Layers
+                    className={`mb-2 w-[30px] h-[30px] transition-all duration-300 ease-in-out ${
+                      location.pathname === ele.link
+                        ? "text-white"
+                        : "text-gray-400"
+                    }`}
+                  />
+                ) : ele.icon === "Package" ? (
+                  <Package
+                    className={`mb-2 w-[30px] h-[30px] transition-all duration-300 ease-in-out ${
+                      location.pathname === ele.link
+                        ? "text-white"
+                        : "text-gray-400"
+                    }`}
+                  />
+                ) : (
+                  <img
+                    src={ele.icon}
+                    alt="icon"
+                    className={`mb-2 w-[30px] lg:w-[30px] transition-all duration-300 ease-in-out ${
+                      location.pathname === ele.link
+                        ? "filter brightness-0 invert"
+                        : ""
+                    }`}
+                  />
+                )}
                 <p className={`text-sm text-center`}>{ele.title}</p>
               </div>
             )

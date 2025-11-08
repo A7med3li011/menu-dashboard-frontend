@@ -2,8 +2,8 @@ import axios from "axios";
 
 // export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
 // export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-export const baseUrl = `http://localhost:3001/api/v1`;
-export const imageBase = `http://localhost:3001/uploads/`;
+export const baseUrl = `http://localhost:4000/api/v1`;
+export const imageBase = `http://localhost:4000/uploads/`;
 
 // ==================== AUTHENTICATION ====================
 export async function login_staff(body) {

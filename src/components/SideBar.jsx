@@ -3,7 +3,7 @@ import offerIcon from "../assets/discount.png";
 import logoutIcon from "../assets/logout-outlined.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Menu, Layers, Package, BookOpen } from "lucide-react";
+import { Menu, Layers, Package, BookOpen, MessageSquare } from "lucide-react";
 
 export default function SideBar() {
   const navigate = useNavigate();
@@ -23,16 +23,17 @@ export default function SideBar() {
       link: "/categories",
       access: ["admin"],
     },
-    {
-      title: "SubCategories",
-      icon: "Layers",
-      link: "/subcategories",
-      access: ["admin"],
-    },
+
     {
       title: "Products",
       icon: "Package",
       link: "/products",
+      access: ["admin"],
+    },
+    {
+      title: "Reviews",
+      icon: "MessageSquare",
+      link: "/reviews",
       access: ["admin"],
     },
     {
@@ -85,6 +86,14 @@ export default function SideBar() {
                   />
                 ) : ele.icon === "Package" ? (
                   <Package
+                    className={`mb-2 w-[30px] h-[30px] transition-all duration-300 ease-in-out ${
+                      location.pathname === ele.link
+                        ? "text-white"
+                        : "text-gray-400"
+                    }`}
+                  />
+                ) : ele.icon === "MessageSquare" ? (
+                  <MessageSquare
                     className={`mb-2 w-[30px] h-[30px] transition-all duration-300 ease-in-out ${
                       location.pathname === ele.link
                         ? "text-white"

@@ -31,9 +31,24 @@ export default function DishCard({ data, onDelete }) {
     }
   };
 
+  // Parse extras
+  const parseExtras = (extras) => {
+    if (!extras) return [];
+    if (Array.isArray(extras)) return extras;
+    if (typeof extras === "string") {
+      try {
+        return JSON.parse(extras);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   const ingredientsList = parseIngredients(data?.ingredients);
   const displayIngredients = ingredientsList; // Show first 3 ingredients
   const hasMoreIngredients = ingredientsList.length > 6;
+  const extrasList = parseExtras(data?.extras);
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
@@ -88,7 +103,7 @@ export default function DishCard({ data, onDelete }) {
 
           {/* Category Tag */}
           <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-medium">
-            {data?.subCategory?.title}
+            {data?.category?.title}
           </div>
         </div>
 
@@ -154,6 +169,43 @@ export default function DishCard({ data, onDelete }) {
                       +{ingredientsList.length - 3} more
                     </span>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Extras Section */}
+            {extrasList.length > 0 && (
+              <div className="space-y-2 pt-3 border-t border-gray-700/50">
+                <span className="text-gray-300 text-sm font-medium flex items-center gap-1">
+                  <svg
+                    className="w-4 h-4 text-popular"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Available Extras
+                </span>
+                <div className="space-y-1">
+                  {extrasList.map((extra, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-popular/5 px-2 py-1.5 rounded-md border border-popular/10"
+                    >
+                      <span className="text-white text-xs font-medium">
+                        {extra.name}
+                      </span>
+                      <span className="text-popular text-xs font-semibold">
+                        +{extra.price} EG
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

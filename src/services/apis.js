@@ -1,9 +1,9 @@
 import axios from "axios";
 
-// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
-// export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-export const baseUrl = `http://localhost:3001/api/v1`;
-export const imageBase = `http://localhost:3001/uploads/`;
+export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+// export const baseUrl = `http://localhost:3001/api/v1`;
+// export const imageBase = `http://localhost:3001/uploads/`;
 
 // ==================== AUTHENTICATION ====================
 export async function login_staff(body) {
@@ -58,66 +58,8 @@ export async function deleteCategory(categoryId, token) {
 }
 
 // ==================== SUBCATEGORIES ====================
-export async function getsubCategoryies(token) {
-  const { data } = await axios.get(`${baseUrl}/subcategory/`, {
-    headers: {
-      token: `${token}`,
-    },
-  });
-  return data.data;
-}
-
-export async function getSubCategoryById(subCategoryId, token) {
-  const { data } = await axios.get(`${baseUrl}/subcategory/${subCategoryId}`, {
-    headers: {
-      token: `${token}`,
-    },
-  });
-  return data;
-}
-
-export async function getsubCategoryByCategorie(id, token) {
-  const { data } = await axios.get(`${baseUrl}/subcategory/category/${id}`, {
-    headers: {
-      token: `${token}`,
-    },
-  });
-  return data.data || [];
-}
-
-export async function createSubCategory(payload, token) {
-  const { data } = await axios.post(`${baseUrl}/subcategory`, payload, {
-    headers: {
-      token: `${token}`,
-    },
-  });
-  return data;
-}
-
-export async function updateSubCategory(subCategoryId, body, token) {
-  const { data } = await axios.put(
-    `${baseUrl}/subCategory/${subCategoryId}`,
-    body,
-    {
-      headers: {
-        Token: `${token}`,
-      },
-    }
-  );
-  return data;
-}
-
-export async function deleteSubCategory(subCategoryId, token) {
-  const { data } = await axios.delete(
-    `${baseUrl}/subcategory/${subCategoryId}`,
-    {
-      headers: {
-        token: `${token}`,
-      },
-    }
-  );
-  return data;
-}
+// Subcategory functionality has been removed
+// Products now connect directly to categories
 
 // ==================== PRODUCTS ====================
 export async function getproducts(token) {
@@ -139,7 +81,7 @@ export async function getProductById(id, token) {
 }
 
 export async function getproductsBysubCat(id, token) {
-  const { data } = await axios.get(`${baseUrl}/product/bysubcat/${id}`, {
+  const { data } = await axios.get(`${baseUrl}/product/cat/${id}`, {
     headers: {
       token: `${token}`,
     },
@@ -313,6 +255,18 @@ export async function deActiveOffer(offerId, token) {
   const { data } = await axios.patch(
     `${baseUrl}/offers/deActive/${offerId}`,
     {},
+    {
+      headers: {
+        token: `${token}`,
+      },
+    }
+  );
+  return data;
+}
+export async function getReviews(token) {
+  const { data } = await axios.get(
+    `${baseUrl}/review`,
+
     {
       headers: {
         token: `${token}`,

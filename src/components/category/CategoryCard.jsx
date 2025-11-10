@@ -65,21 +65,6 @@ export default function CategoryCard({ data, onDelete }) {
           </h3>
 
           <div className="space-y-3">
-            {/* Sub Categories */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
-                <TableOfContents className="w-4 h-4 text-popular" />
-              </div>
-              <div className="flex-1">
-                <span className="text-gray-300 text-sm font-medium">
-                  Sub Categories
-                </span>
-                <p className="text-white font-semibold">
-                  {data?.numsubCategory}
-                </p>
-              </div>
-            </div>
-
             {/* Products */}
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">

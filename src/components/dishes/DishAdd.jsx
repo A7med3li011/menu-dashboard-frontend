@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   createProduct,
   getCategories,
-  getsubCategoryByCategorie,
 } from "../../services/apis";
 import { useState } from "react";
 import { useFormik } from "formik";
@@ -24,12 +23,25 @@ const validationSchema = Yup.object({
     .max(500, "Description must not exceed 500 characters")
     .trim(),
   category: Yup.string().required("Category is required"),
-  subCategory: Yup.string().required("Sub category is required"),
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive")
     .min(0.01, "Price must be at least 0.01")
     .max(9999.99, "Price cannot exceed 9999.99"),
+  priceAfterDiscount: Yup.number()
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .positive("Price after discount must be positive")
+    .min(0.01, "Price after discount must be at least 0.01")
+    .max(9999.99, "Price after discount cannot exceed 9999.99")
+    .test(
+      "less-than-price",
+      "Price after discount must be less than original price",
+      function (value) {
+        if (!value) return true; // Optional field
+        return value < this.parent.price;
+      }
+    ),
   ingredients: Yup.array()
     .of(
       Yup.string()
@@ -40,6 +52,22 @@ const validationSchema = Yup.object({
     )
     .min(1, "At least one ingredient is required")
     .max(20, "Maximum 20 ingredients allowed"),
+  extras: Yup.array()
+    .of(
+      Yup.object().shape({
+        name: Yup.string()
+          .required("Extra name is required")
+          .min(1, "Extra name must be at least 1 character")
+          .max(50, "Extra name must not exceed 50 characters")
+          .trim(),
+        price: Yup.number()
+          .required("Extra price is required")
+          .positive("Price must be positive")
+          .min(0.01, "Price must be at least 0.01")
+          .max(999.99, "Price cannot exceed 999.99")
+      })
+    )
+    .max(10, "Maximum 10 extras allowed"),
   image: Yup.mixed()
     .required("Image is required")
     .test("fileSize", "File size is too large (max 5MB)", (value) => {
@@ -59,7 +87,6 @@ const validationSchema = Yup.object({
 });
 
 export default function DishAdd() {
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const navigate = useNavigate();
 
@@ -74,17 +101,6 @@ export default function DishAdd() {
     queryKey: ["get-categories"],
     queryFn: () => getCategories(token),
     refetchOnWindowFocus: false,
-  });
-
-  const {
-    data: subCategoryList,
-    isLoading: subLoading,
-    error: subError,
-  } = useQuery({
-    queryKey: ["get-sub-categories", selectedCategory],
-    queryFn: () => getsubCategoryByCategorie(selectedCategory, token),
-    refetchOnWindowFocus: false,
-    enabled: !!selectedCategory,
   });
 
   // Mutation
@@ -106,9 +122,10 @@ export default function DishAdd() {
       title: "",
       description: "",
       category: "",
-      subCategory: "",
       price: "",
+      priceAfterDiscount: "",
       ingredients: [""], // Start with one empty ingredient field
+      extras: [], // Start with empty extras array
       image: null,
     },
     validationSchema,
@@ -117,9 +134,9 @@ export default function DishAdd() {
         // Create FormData for file upload
         const formData = new FormData();
 
-        // Append all fields except ingredients
+        // Append all fields except ingredients and extras
         Object.keys(values).forEach((key) => {
-          if (key !== "ingredients") {
+          if (key !== "ingredients" && key !== "extras") {
             formData.append(key, values[key]);
           }
         });
@@ -131,6 +148,11 @@ export default function DishAdd() {
           }
         });
 
+        // Handle extras array - send as JSON string
+        if (values.extras && values.extras.length > 0) {
+          formData.append("extras", JSON.stringify(values.extras));
+        }
+
         mutate(formData);
       } catch (error) {
         console.error("Error preparing form data:", error);
@@ -141,12 +163,6 @@ export default function DishAdd() {
     },
   });
 
-  const handleCategoryChange = (e) => {
-    const categoryId = e.target.value;
-    setSelectedCategory(categoryId);
-    formik.setFieldValue("category", categoryId);
-    formik.setFieldValue("subCategory", ""); // Reset subcategory when category changes
-  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -184,9 +200,27 @@ export default function DishAdd() {
     formik.setFieldValue("ingredients", newIngredients);
   };
 
+  // Extras handlers
+  const addExtra = () => {
+    if (formik.values.extras.length < 10) {
+      const newExtras = [...formik.values.extras, { name: "", price: "" }];
+      formik.setFieldValue("extras", newExtras);
+    }
+  };
+
+  const removeExtra = (index) => {
+    const newExtras = formik.values.extras.filter((_, i) => i !== index);
+    formik.setFieldValue("extras", newExtras);
+  };
+
+  const updateExtra = (index, field, value) => {
+    const newExtras = [...formik.values.extras];
+    newExtras[index][field] = value;
+    formik.setFieldValue("extras", newExtras);
+  };
+
   const handleReset = () => {
     formik.resetForm();
-    setSelectedCategory("");
     setImagePreview(null);
   };
 
@@ -261,7 +295,7 @@ export default function DishAdd() {
               <select
                 name="category"
                 value={formik.values.category}
-                onChange={handleCategoryChange}
+                onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
                   formik.touched.category && formik.errors.category
@@ -293,52 +327,11 @@ export default function DishAdd() {
               )}
             </div>
 
-            {/* Sub Category */}
-            <div className="w-full">
-              <label className="block font-semibold mb-2">Sub Category *</label>
-              <select
-                name="subCategory"
-                value={formik.values.subCategory}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                disabled={!selectedCategory || subLoading}
-                className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular disabled:opacity-50 disabled:cursor-not-allowed ${
-                  formik.touched.subCategory && formik.errors.subCategory
-                    ? "border-red-500"
-                    : "border-popular"
-                }`}
-              >
-                <option value="" className="bg-secondary">
-                  {subLoading
-                    ? "Loading..."
-                    : !selectedCategory
-                    ? "Select Category First"
-                    : subError
-                    ? "Error loading subcategories"
-                    : "Select Sub Category"}
-                </option>
-                {subCategoryList?.map((ele) => (
-                  <option
-                    key={ele._id}
-                    className="bg-secondary"
-                    value={ele._id}
-                  >
-                    {ele?.title}
-                  </option>
-                ))}
-              </select>
-              {formik.touched.subCategory && formik.errors.subCategory && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.subCategory}
-                </p>
-              )}
-            </div>
-
             {/* Price */}
             <div className="w-full">
               <label className="block font-semibold mb-2">Price *</label>
               <input
-                type="text"
+                type="number"
                 name="price"
                 value={formik.values.price}
                 onChange={formik.handleChange}
@@ -358,6 +351,39 @@ export default function DishAdd() {
                   {formik.errors.price}
                 </p>
               )}
+            </div>
+
+            {/* Price After Discount */}
+            <div className="w-full">
+              <label className="block font-semibold mb-2">
+                Price After Discount - Optional
+              </label>
+              <input
+                type="number"
+                name="priceAfterDiscount"
+                value={formik.values.priceAfterDiscount}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                max="9999.99"
+                className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.priceAfterDiscount &&
+                  formik.errors.priceAfterDiscount
+                    ? "border-red-500"
+                    : "border-popular"
+                }`}
+              />
+              {formik.touched.priceAfterDiscount &&
+                formik.errors.priceAfterDiscount && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formik.errors.priceAfterDiscount}
+                  </p>
+                )}
+              <p className="text-gray-400 text-xs mt-1">
+                Leave empty if no discount is applied
+              </p>
             </div>
 
             {/* Ingredients */}
@@ -451,6 +477,119 @@ export default function DishAdd() {
               )}
             </div>
 
+            {/* Extras */}
+            <div className="w-full">
+              <label className="block font-semibold mb-2">
+                Extras ({formik.values.extras.length}/10) - Optional
+              </label>
+              <div className="space-y-3">
+                {formik.values.extras.map((extra, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <div>
+                        <input
+                          type="text"
+                          value={extra.name}
+                          onChange={(e) => updateExtra(index, "name", e.target.value)}
+                          onBlur={formik.handleBlur}
+                          placeholder={`Extra name ${index + 1}`}
+                          className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
+                            formik.touched.extras?.[index]?.name &&
+                            formik.errors.extras?.[index]?.name
+                              ? "border-red-500"
+                              : "border-popular"
+                          }`}
+                        />
+                        {formik.touched.extras?.[index]?.name &&
+                          formik.errors.extras?.[index]?.name && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {formik.errors.extras[index].name}
+                            </p>
+                          )}
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          value={extra.price}
+                          onChange={(e) => updateExtra(index, "price", e.target.value)}
+                          onBlur={formik.handleBlur}
+                          placeholder="Price"
+                          step="0.01"
+                          min="0"
+                          className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
+                            formik.touched.extras?.[index]?.price &&
+                            formik.errors.extras?.[index]?.price
+                              ? "border-red-500"
+                              : "border-popular"
+                          }`}
+                        />
+                        {formik.touched.extras?.[index]?.price &&
+                          formik.errors.extras?.[index]?.price && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {formik.errors.extras[index].price}
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeExtra(index)}
+                      className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                      title="Remove extra"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+
+                {formik.values.extras.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={addExtra}
+                    className="flex items-center gap-2 text-popular hover:text-popular/80 font-medium transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    Add Extra
+                  </button>
+                )}
+              </div>
+
+              {/* Display extras errors */}
+              {formik.touched.extras && formik.errors.extras && (
+                <div className="mt-2">
+                  {typeof formik.errors.extras === "string" && (
+                    <p className="text-red-500 text-sm">
+                      {formik.errors.extras}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Image Upload */}
             <div className="w-full">
               <label className="block font-semibold mb-2">Dish Image *</label>
@@ -529,12 +668,14 @@ export default function DishAdd() {
               • Description should explain the dish ingredients and preparation
             </li>
             <li>
-              • Select appropriate category and subcategory for better
-              organization
+              • Select appropriate category for better organization
             </li>
             <li>
               • Add all ingredients one by one using the "Add More Ingredient"
               button (max 20)
+            </li>
+            <li>
+              • Extras are optional - add name and price for each extra item (max 10)
             </li>
             <li>
               • Price should be accurate and include currency considerations

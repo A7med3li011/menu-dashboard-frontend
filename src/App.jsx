@@ -13,12 +13,6 @@ import CategoryAdd from "./components/category/CategoryAdd";
 import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
-// SubCategories
-import SubCategories from "./pages/SubCategories";
-import SubCategoryAdd from "./components/subCategory/SubCategoryAdd";
-import EditSubCategory from "./components/subCategory/EditSubCategory";
-import ViewSubCategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
-
 // Products
 import Products from "./pages/Products";
 import DishAdd from "./components/dishes/DishAdd";
@@ -33,6 +27,9 @@ import Offer from "./pages/Offer";
 
 // Menu Display
 import MenuDisplay from "./pages/MenuDisplay";
+
+// Reviews
+import Reviews from "./pages/Reviews";
 
 function App() {
   const router = createBrowserRouter([
@@ -92,40 +89,6 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
               <ViewCategoryDetails />
-            </RoleBasedRoute>
-          ),
-        },
-
-        // SubCategories Routes
-        {
-          path: "/subcategories",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <SubCategories />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/add-sub-category",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <SubCategoryAdd />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/subcategory/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <EditSubCategory />
-            </RoleBasedRoute>
-          ),
-        },
-        {
-          path: "/subcategoryDetails/:id",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <ViewSubCategoryDetails />
             </RoleBasedRoute>
           ),
         },
@@ -190,6 +153,16 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
               <MenuDisplay />
+            </RoleBasedRoute>
+          ),
+        },
+
+        // Reviews
+        {
+          path: "/reviews",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Reviews />
             </RoleBasedRoute>
           ),
         },

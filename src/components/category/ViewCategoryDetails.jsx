@@ -6,8 +6,7 @@ import { toast } from "react-toastify";
 import { ChefHat, Coins, ArrowLeft, Tag, Layers } from "lucide-react";
 import {
   getCategory,
-  getsubCategoryByCategorie,
-  getproductsBysubCat,
+  getproducts,
   imageBase,
 } from "../../services/apis.js";
 
@@ -30,36 +29,23 @@ const ViewCategoryDetails = () => {
     enabled: !!categoryId && !!token,
   });
 
-  // 2. Fetch Subcategories
-  const { data: subCategoriesData, isLoading: subCategoriesLoading } = useQuery(
-    {
-      queryKey: ["subcategories", categoryId],
-      queryFn: () => getsubCategoryByCategorie(categoryId, token),
-      enabled: !!categoryId && !!token,
-    }
-  );
-
   // --- DATA EXTRACTION ---
   const category = categoryData?.data || categoryData;
-  const subCategories = subCategoriesData || [];
 
-  // 3. Fetch Products
-  const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ["products", categoryId, subCategories.map((s) => s._id)],
-    queryFn: async () => {
-      if (subCategories.length === 0) return [];
-      const productPromises = subCategories.map((sub) =>
-        getproductsBysubCat(sub._id, token)
-      );
-      const results = await Promise.all(productPromises);
-      return results.flatMap((response) => response.data || []);
-    },
-    enabled: !!token && subCategories.length > 0,
-    initialData: [],
+  // 2. Fetch All Products
+  const { data: allProducts, isLoading: productsLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => getproducts(token),
+    enabled: !!token,
   });
 
+  // Filter products by category
+  const products = allProducts?.filter(
+    (product) => product.category?._id === categoryId
+  ) || [];
+
   const handleGoBack = () => navigate(-1);
-  const isLoading = categoryLoading || subCategoriesLoading;
+  const isLoading = categoryLoading;
 
   if (isLoading) {
     return (
@@ -88,54 +74,25 @@ const ViewCategoryDetails = () => {
             <div className="w-16"></div> {/* Spacer */}
           </div>
 
-          {/* --- Category and Subcategory Info --- */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Category Card */}
-            <div className="bg-popular/10 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Tag className="w-5 h-5 text-blue-400 mr-2" />
-                <h3 className="text-lg font-semibold text-white">Category</h3>
-              </div>
-              <div className="flex items-center space-x-4">
-                {category?.image && (
-                  <img
-                    src={`${imageBase}${category.image}`}
-                    alt={category.title}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                )}
-                <div>
-                  <p className="text-white font-medium">{category?.title}</p>
-                  <p className="text-gray-400 text-sm">
-                    {subCategories.length} Subcategories
-                  </p>
-                </div>
-              </div>
+          {/* --- Category Info --- */}
+          <div className="bg-popular/10 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <Tag className="w-6 h-6 text-blue-400 mr-3" />
+              <h3 className="text-xl font-semibold text-white">Category Information</h3>
             </div>
-
-            {/* Subcategories List */}
-            <div className="bg-popular/10 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Layers className="w-5 h-5 text-popular mr-2" />
-                <h3 className="text-lg font-semibold text-white">
-                  Subcategories
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {subCategories.length > 0 ? (
-                  subCategories.map((sub) => (
-                    <span
-                      key={sub._id}
-                      className="px-3 py-1 bg-primary text-white text-sm rounded-full"
-                    >
-                      {sub.title}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm">
-                    No subcategories found.
-                  </p>
-                )}
+            <div className="flex items-center space-x-6">
+              {category?.image && (
+                <img
+                  src={`${imageBase}${category.image}`}
+                  alt={category.title}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
+              )}
+              <div>
+                <p className="text-white font-medium text-lg">{category?.title}</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  {products.length} {products.length === 1 ? 'Product' : 'Products'}
+                </p>
               </div>
             </div>
           </div>
@@ -156,7 +113,7 @@ const ViewCategoryDetails = () => {
               No Products Found
             </h3>
             <p className="text-gray-400">
-              There are no products available in this category's subcategories.
+              There are no products available in this category.
             </p>
           </div>
         ) : (

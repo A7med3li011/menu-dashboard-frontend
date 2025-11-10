@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import {
   getCategories,
-  getsubCategoryies,
   getproducts,
   imageBase,
 } from "../services/apis";
@@ -14,7 +13,6 @@ export default function MenuDisplay() {
 
   // Filters state
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [searchTitle, setSearchTitle] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
 
@@ -22,11 +20,6 @@ export default function MenuDisplay() {
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(token),
-  });
-
-  const { data: subCategories, isLoading: subCategoriesLoading } = useQuery({
-    queryKey: ["subcategories"],
-    queryFn: () => getsubCategoryies(token),
   });
 
   const { data: products, isLoading: productsLoading } = useQuery({
@@ -47,13 +40,6 @@ export default function MenuDisplay() {
       );
     }
 
-    // Filter by subcategory
-    if (selectedSubCategory) {
-      filtered = filtered.filter(
-        (product) => product.subCategory?._id === selectedSubCategory
-      );
-    }
-
     // Filter by title search
     if (searchTitle.trim()) {
       filtered = filtered.filter((product) =>
@@ -62,25 +48,17 @@ export default function MenuDisplay() {
     }
 
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, selectedSubCategory, searchTitle]);
-
-  // Get subcategories for selected category
-  const filteredSubCategories = selectedCategory
-    ? subCategories?.filter(
-        (sub) => sub.category?._id === selectedCategory || sub.category === selectedCategory
-      )
-    : subCategories;
+  }, [products, selectedCategory, searchTitle]);
 
   // Reset filters
   const handleResetFilters = () => {
     setSelectedCategory("");
-    setSelectedSubCategory("");
     setSearchTitle("");
   };
 
-  const hasActiveFilters = selectedCategory || selectedSubCategory || searchTitle;
+  const hasActiveFilters = selectedCategory || searchTitle;
 
-  if (categoriesLoading || subCategoriesLoading || productsLoading) {
+  if (categoriesLoading || productsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -122,7 +100,7 @@ export default function MenuDisplay() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search by Title */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -147,36 +125,13 @@ export default function MenuDisplay() {
               </label>
               <select
                 value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setSelectedSubCategory(""); // Reset subcategory when category changes
-                }}
+                onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-popular focus:border-transparent"
               >
                 <option value="">All Categories</option>
                 {categories?.map((category) => (
                   <option key={category._id} value={category._id}>
                     {category.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Filter by SubCategory */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Sub Category
-              </label>
-              <select
-                value={selectedSubCategory}
-                onChange={(e) => setSelectedSubCategory(e.target.value)}
-                disabled={!selectedCategory && !subCategories?.length}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-popular focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">All Sub Categories</option>
-                {filteredSubCategories?.map((subCategory) => (
-                  <option key={subCategory._id} value={subCategory._id}>
-                    {subCategory.title}
                   </option>
                 ))}
               </select>
@@ -193,11 +148,6 @@ export default function MenuDisplay() {
                 {selectedCategory &&
                   ` in ${
                     categories?.find((c) => c._id === selectedCategory)?.title
-                  }`}
-                {selectedSubCategory &&
-                  ` > ${
-                    subCategories?.find((s) => s._id === selectedSubCategory)
-                      ?.title
                   }`}
               </p>
             </div>
@@ -256,16 +206,11 @@ export default function MenuDisplay() {
                     {product.description || "No description available"}
                   </p>
 
-                  {/* Category & SubCategory Tags */}
+                  {/* Category Tag */}
                   <div className="flex flex-wrap gap-2 mb-3">
                     {product.category && (
                       <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded">
                         {product.category?.title || "Category"}
-                      </span>
-                    )}
-                    {product.subCategory && (
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-green-600 text-white rounded">
-                        {product.subCategory?.title || "SubCategory"}
                       </span>
                     )}
                   </div>
@@ -290,6 +235,30 @@ export default function MenuDisplay() {
                             +{product.ingredients.length - 3} more
                           </span>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Extras */}
+                  {product.extras && product.extras.length > 0 && (
+                    <div className="border-t border-gray-600 pt-3 mt-3">
+                      <p className="text-xs font-medium text-gray-400 mb-2">
+                        Available Extras:
+                      </p>
+                      <div className="space-y-1">
+                        {product.extras.map((extra, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-gray-700/30 px-2 py-1 rounded"
+                          >
+                            <span className="text-xs text-gray-200">
+                              {extra.name}
+                            </span>
+                            <span className="text-xs text-popular font-semibold">
+                              +${extra.price?.toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

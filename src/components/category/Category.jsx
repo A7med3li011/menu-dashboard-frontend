@@ -157,15 +157,6 @@ export default function Category() {
               <p className="text-sm text-gray-600">Total Products</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-blue-600">
-                {categoryList.reduce(
-                  (acc, cat) => acc + (cat.numsubCategory || 0),
-                  0
-                )}
-              </p>
-              <p className="text-sm text-gray-600">Sub Categories</p>
-            </div>
-            <div>
               <p className="text-2xl font-bold text-purple-600">
                 {Math.round(
                   categoryList.reduce(

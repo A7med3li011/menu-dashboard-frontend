@@ -9,11 +9,10 @@ import { useSelector } from "react-redux";
 import { Upload, X } from "lucide-react";
 import Category from "./Category";
 
-// FIXED: Updated schema for subcategory validation
 const createCategorySchema = (isEdit, hasExistingImage) =>
   Yup.object({
     title: Yup.string()
-      .required("Subcategory title is required")
+      .required("Category title is required")
       .min(3, "title must be at least 3 characters")
       .max(100, "title must not exceed 100 characters"),
 
@@ -209,7 +208,7 @@ export default function EditCategory() {
     }
   }, [hasExistingImage, hasNewImage, formik.values.image]);
 
-  // Update subcategory mutation
+  // Update category mutation
   const updateMutation = useMutation({
     mutationKey: ["update-category"],
     mutationFn: ({ formData }) => updateCategory(id, formData, token),
@@ -227,7 +226,7 @@ export default function EditCategory() {
       } else if (error?.message) {
         toast.error(`Update failed: ${error.message}`);
       } else {
-        toast.error("Failed to update subcategory. Please try again.");
+        toast.error("Failed to update category. Please try again.");
       }
     },
   });

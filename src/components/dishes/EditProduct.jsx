@@ -5,7 +5,6 @@ import {
   getProductById,
   updateProduct,
   getCategories,
-  getsubCategoryByCategorie,
   imageBase,
 } from "../../services/apis";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,11 +28,40 @@ const createProductSchema = (isEdit, hasExistingImage) =>
       .required("Price is required")
       .positive("Price must be positive")
       .min(0.01, "Price must be at least $0.01"),
+    priceAfterDiscount: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === "" ? null : value))
+      .positive("Price after discount must be positive")
+      .min(0.01, "Price after discount must be at least 0.01")
+      .max(9999.99, "Price after discount cannot exceed 9999.99")
+      .test(
+        "less-than-price",
+        "Price after discount must be less than original price",
+        function (value) {
+          if (!value) return true; // Optional field
+          return value < this.parent.price;
+        }
+      ),
     category: Yup.string().required("Category is required"),
-    subCategory: Yup.string().required("Sub-category is required"),
     ingredients: Yup.array()
       .min(1, "At least one ingredient must be added")
       .required("Ingredients are required"),
+    extras: Yup.array()
+      .of(
+        Yup.object().shape({
+          name: Yup.string()
+            .required("Extra name is required")
+            .min(1, "Extra name must be at least 1 character")
+            .max(50, "Extra name must not exceed 50 characters")
+            .trim(),
+          price: Yup.number()
+            .required("Extra price is required")
+            .positive("Price must be positive")
+            .min(0.01, "Price must be at least 0.01")
+            .max(999.99, "Price cannot exceed 999.99")
+        })
+      )
+      .max(10, "Maximum 10 extras allowed"),
     image: Yup.mixed().test(
       "image-required",
       "Product image is required",
@@ -79,9 +107,10 @@ export default function EditProduct() {
       title: "",
       description: "",
       price: "",
+      priceAfterDiscount: "",
       category: "",
-      subCategory: "",
       ingredients: [],
+      extras: [],
       image: null,
     },
     validationSchema: validationSchema,
@@ -96,6 +125,11 @@ export default function EditProduct() {
             ? values[key]
             : [];
           formData.append(key, JSON.stringify(ingredientsArray));
+        } else if (key === "extras") {
+          // Handle extras array - send as JSON string
+          if (values[key] && values[key].length > 0) {
+            formData.append(key, JSON.stringify(values[key]));
+          }
         } else if (key === "image") {
           // Only append image if a new one was selected and it's a valid File object
           if (hasNewImage && values[key] && values[key] instanceof File) {
@@ -120,16 +154,6 @@ export default function EditProduct() {
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(token),
-  });
-
-  const { data: subCategoriesData } = useQuery({
-    queryKey: ["subcategories", formik.values.category],
-    queryFn: () => getsubCategoryByCategorie(formik.values.category, token),
-    enabled: Boolean(formik.values.category),
-
-    onError: (error) => {
-      console.error("Error fetching subcategories:", error);
-    },
   });
 
   // Fetch product data for editing
@@ -191,6 +215,23 @@ export default function EditProduct() {
           }
         }
 
+        // Handle extras parsing
+        let extras = [];
+        if (product.extras) {
+          if (Array.isArray(product.extras)) {
+            extras = product.extras;
+          } else if (typeof product.extras === "string") {
+            try {
+              const parsed = JSON.parse(product.extras);
+              if (Array.isArray(parsed)) {
+                extras = parsed;
+              }
+            } catch (error) {
+              console.warn("Failed to parse extras as JSON:", error);
+            }
+          }
+        }
+
         // Handle existing image with proper error handling
         if (product.image && typeof product.image === "object") {
           // Handle case where image is an object with filename property
@@ -227,9 +268,10 @@ export default function EditProduct() {
           title: product.title || "",
           description: product.description || "",
           price: product.price || "",
+          priceAfterDiscount: product.priceAfterDiscount || "",
           category: product.category?._id || "",
-          subCategory: product.subCategory?._id || "",
           ingredients: ingredients,
+          extras: extras,
           image: product.image ? "EXISTING_IMAGE_PLACEHOLDER" : null,
         });
       } catch (error) {
@@ -353,6 +395,27 @@ export default function EditProduct() {
     formik.setFieldValue("ingredients", updatedIngredients);
   };
 
+  // Handle adding extras
+  const handleAddExtra = () => {
+    if (formik.values.extras.length < 10) {
+      const newExtras = [...formik.values.extras, { name: "", price: "" }];
+      formik.setFieldValue("extras", newExtras);
+    }
+  };
+
+  // Handle removing extras
+  const handleRemoveExtra = (index) => {
+    const newExtras = formik.values.extras.filter((_, i) => i !== index);
+    formik.setFieldValue("extras", newExtras);
+  };
+
+  // Handle updating extras
+  const handleUpdateExtra = (index, field, value) => {
+    const newExtras = [...formik.values.extras];
+    newExtras[index][field] = value;
+    formik.setFieldValue("extras", newExtras);
+  };
+
   // Handle cancel with modal
   const handleCancel = () => {
     setShowCancelModal(true);
@@ -365,7 +428,7 @@ export default function EditProduct() {
 
   const confirmCancel = () => {
     setShowCancelModal(false);
-    navigate("/managment");
+    navigate("/products");
   };
 
   // Loading state
@@ -554,81 +617,75 @@ export default function EditProduct() {
               )}
             </div>
 
-            {/* Category and SubCategory Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="category"
-                  className="block text-white font-medium mb-2"
-                >
-                  Category
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  onChange={(e) => {
-                    formik.handleChange(e);
-                    formik.setFieldValue("subCategory", "");
-                  }}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.category}
-                  className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
-                    formik.touched.category && formik.errors.category
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                >
-                  <option value="" disabled>
-                    Choose category
-                  </option>
-                  {categoriesData?.map((category) => (
-                    <option key={category._id} value={category._id}>
-                      {category.title}
-                    </option>
-                  ))}
-                </select>
-                {formik.touched.category && formik.errors.category && (
+            {/* Price After Discount Field */}
+            <div>
+              <label
+                htmlFor="priceAfterDiscount"
+                className="block text-white font-medium mb-2"
+              >
+                Price After Discount ($) - Optional
+              </label>
+              <input
+                id="priceAfterDiscount"
+                name="priceAfterDiscount"
+                type="number"
+                step="0.01"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.priceAfterDiscount}
+                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.priceAfterDiscount &&
+                  formik.errors.priceAfterDiscount
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+                placeholder="Enter discounted price"
+              />
+              {formik.touched.priceAfterDiscount &&
+                formik.errors.priceAfterDiscount && (
                   <p className="text-red-400 text-sm mt-1">
-                    {formik.errors.category}
+                    {formik.errors.priceAfterDiscount}
                   </p>
                 )}
-              </div>
+              <p className="text-gray-400 text-xs mt-1">
+                Leave empty if no discount is applied
+              </p>
+            </div>
 
-              <div>
-                <label
-                  htmlFor="subCategory"
-                  className="block text-white font-medium mb-2"
-                >
-                  Sub-Category
-                </label>
-                <select
-                  id="subCategory"
-                  name="subCategory"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.subCategory}
-                  disabled={!formik.values.category}
-                  className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular disabled:opacity-50 ${
-                    formik.touched.subCategory && formik.errors.subCategory
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                >
-                  <option value="" disabled>
-                    Choose sub-category
+            {/* Category */}
+            <div>
+              <label
+                htmlFor="category"
+                className="block text-white font-medium mb-2"
+              >
+                Category
+              </label>
+              <select
+                id="category"
+                name="category"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.category}
+                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.category && formik.errors.category
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+              >
+                <option value="" disabled>
+                  Choose category
+                </option>
+                {categoriesData?.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.title}
                   </option>
-                  {subCategoriesData?.map((subCat) => (
-                    <option key={subCat._id} value={subCat._id}>
-                      {subCat.title}
-                    </option>
-                  ))}
-                </select>
-                {formik.touched.subCategory && formik.errors.subCategory && (
-                  <p className="text-red-400 text-sm mt-1">
-                    {formik.errors.subCategory}
-                  </p>
-                )}
-              </div>
+                ))}
+              </select>
+              {formik.touched.category && formik.errors.category && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.category}
+                </p>
+              )}
             </div>
 
             {/* Ingredients Section */}
@@ -680,6 +737,93 @@ export default function EditProduct() {
                 <p className="text-red-400 text-sm mt-2">
                   {formik.errors.ingredients}
                 </p>
+              )}
+            </div>
+
+            {/* Extras Section */}
+            <div>
+              <label className="block text-white font-medium mb-2">
+                Extras ({formik.values.extras.length}/10) - Optional
+              </label>
+
+              <div className="space-y-3">
+                {formik.values.extras.map((extra, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <div>
+                        <input
+                          type="text"
+                          value={extra.name}
+                          onChange={(e) => handleUpdateExtra(index, "name", e.target.value)}
+                          onBlur={formik.handleBlur}
+                          placeholder={`Extra name ${index + 1}`}
+                          className={`w-full px-4 py-2 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                            formik.touched.extras?.[index]?.name &&
+                            formik.errors.extras?.[index]?.name
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {formik.touched.extras?.[index]?.name &&
+                          formik.errors.extras?.[index]?.name && (
+                            <p className="text-red-400 text-xs mt-1">
+                              {formik.errors.extras[index].name}
+                            </p>
+                          )}
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          value={extra.price}
+                          onChange={(e) => handleUpdateExtra(index, "price", e.target.value)}
+                          onBlur={formik.handleBlur}
+                          placeholder="Price"
+                          step="0.01"
+                          min="0"
+                          className={`w-full px-4 py-2 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                            formik.touched.extras?.[index]?.price &&
+                            formik.errors.extras?.[index]?.price
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {formik.touched.extras?.[index]?.price &&
+                          formik.errors.extras?.[index]?.price && (
+                            <p className="text-red-400 text-xs mt-1">
+                              {formik.errors.extras[index].price}
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExtra(index)}
+                      className="text-red-400 hover:text-red-300 transition-colors p-2"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddExtra}
+                disabled={formik.values.extras.length >= 10}
+                className="mt-3 px-4 py-2 bg-popular hover:bg-opacity-90 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Add Extra
+              </button>
+
+              {formik.touched.extras && formik.errors.extras && (
+                <div className="mt-2">
+                  {typeof formik.errors.extras === "string" && (
+                    <p className="text-red-400 text-sm">
+                      {formik.errors.extras}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 

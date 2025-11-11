@@ -15,7 +15,7 @@ import ViewCategoryDetails from "./components/category/ViewCategoryDetails.jsx";
 
 // Subcategories
 import Subcategories from "./pages/SubCategories.jsx";
-import SubCategoryAdd from "./components/subcategory/SubCategoryAdd.jsx";
+// import SubCategoryAdd from "./components/subcategory/SubCategoryAdd.jsx";
 import EditSubcategory from "./components/subcategory/EditSubCategory.jsx";
 import ViewSubcategoryDetails from "./components/subcategory/ViewSubCategoryDetails.jsx";
 
@@ -109,14 +109,14 @@ function App() {
             </RoleBasedRoute>
           ),
         },
-        {
-          path: "/add-subcategory",
-          element: (
-            <RoleBasedRoute allowedRoles={["admin"]}>
-              <SubCategoryAdd />
-            </RoleBasedRoute>
-          ),
-        },
+        // {
+        //   path: "/add-subcategory",
+        //   element: (
+        //     <RoleBasedRoute allowedRoles={["admin"]}>
+        //       <SubCategoryAdd />
+        //     </RoleBasedRoute>
+        //   ),
+        // },
         {
           path: "/subcategory/:id",
           element: (

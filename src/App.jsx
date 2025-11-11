@@ -14,7 +14,7 @@ import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
 // Subcategories
-import Subcategories from "./pages/Subcategories";
+import Subcategories from "./pages/SubCategories";
 import SubcategoryAdd from "./components/subcategory/SubcategoryAdd";
 import EditSubcategory from "./components/subCategory/EditSubCategory";
 import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails";

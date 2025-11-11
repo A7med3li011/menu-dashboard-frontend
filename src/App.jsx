@@ -15,12 +15,12 @@ import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
 // Subcategories
 import Subcategories from "./pages/SubCategories";
-import SubcategoryAdd from "./components/subcategory/SubcategoryAdd";
-import EditSubcategory from "./components/subCategory/EditSubCategory";
-import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
+import SubcategoryAdd from "./components/subcategory/SubcategoryAdd.jsx";
+import EditSubcategory from "./components/subCategory/EditSubCategory.jsx";
+import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails.jsx";
 
 // Products
-import Products from "./pages/Products";
+import Products from "./pages/Products.jsx";
 import DishAdd from "./components/dishes/DishAdd";
 import EditProduct from "./components/dishes/EditProduct";
 

@@ -1,42 +1,42 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import ProtectedRoutes from "./services/ProtectedRoutes";
-import ReverseProtectedRoutes from "./services/ReverseProtectedRoutes";
-import RoleBasedRoute from "./services/RoleBasedRoute";
-import Login from "./pages/Login";
-import Layout from "./pages/Layout";
-import NotFound from "./pages/NotFound";
+import ProtectedRoutes from "./services/ProtectedRoutes.jsx";
+import ReverseProtectedRoutes from "./services/ReverseProtectedRoutes.jsx";
+import RoleBasedRoute from "./services/RoleBasedRoute.jsx";
+import Login from "./pages/Login.jsx";
+import Layout from "./pages/Layout.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 // Categories
-import Categories from "./pages/Categories";
-import CategoryAdd from "./components/category/CategoryAdd";
-import EditCategory from "./components/category/EditCategory";
-import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
+import Categories from "./pages/Categories.jsx";
+import CategoryAdd from "./components/category/CategoryAdd.jsx";
+import EditCategory from "./components/category/EditCategory.jsx";
+import ViewCategoryDetails from "./components/category/ViewCategoryDetails.jsx";
 
 // Subcategories
-import Subcategories from "./pages/SubCategories";
-
-import EditSubcategory from "./components/subCategory/EditSubCategory.jsx";
-import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails.jsx";
+import Subcategories from "./pages/SubCategories.jsx";
+import SubCategoryAdd from "./components/subcategory/SubCategoryAdd.jsx";
+import EditSubcategory from "./components/subcategory/EditSubCategory.jsx";
+import ViewSubcategoryDetails from "./components/subcategory/ViewSubCategoryDetails.jsx";
 
 // Products
 import Products from "./pages/Products.jsx";
-import DishAdd from "./components/dishes/DishAdd";
-import EditProduct from "./components/dishes/EditProduct";
+import DishAdd from "./components/dishes/DishAdd.jsx";
+import EditProduct from "./components/dishes/EditProduct.jsx";
 
 // Ingredients
-import IngredientAdd from "./components/ingredients/IngredientAdd";
-import EditIngredient from "./components/ingredients/EditIngredient";
+import IngredientAdd from "./components/ingredients/IngredientAdd.jsx";
+import EditIngredient from "./components/ingredients/EditIngredient.jsx";
 
 // Offers
-import Offer from "./pages/Offer";
+import Offer from "./pages/Offer.jsx";
 
 // Menu Display
-import MenuDisplay from "./pages/MenuDisplay";
+import MenuDisplay from "./pages/MenuDisplay.jsx";
 
 // Reviews
-import Reviews from "./pages/Reviews";
-import SubCategoryAdd from "./components/subcategory/SubCategoryAdd";
+import Reviews from "./pages/Reviews.jsx";
+
 
 function App() {
   const router = createBrowserRouter([

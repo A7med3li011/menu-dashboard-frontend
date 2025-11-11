@@ -15,7 +15,7 @@ import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
 // Subcategories
 import Subcategories from "./pages/SubCategories";
-import { SubcategoryAdd } from "./components/subcategory/SubCategoryAdd";
+
 import EditSubcategory from "./components/subCategory/EditSubCategory.jsx";
 import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails.jsx";
 
@@ -36,6 +36,7 @@ import MenuDisplay from "./pages/MenuDisplay";
 
 // Reviews
 import Reviews from "./pages/Reviews";
+import SubCategoryAdd from "./components/subcategory/SubCategoryAdd";
 
 function App() {
   const router = createBrowserRouter([
@@ -112,7 +113,7 @@ function App() {
           path: "/add-subcategory",
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
-              <SubcategoryAdd />
+              <SubCategoryAdd />
             </RoleBasedRoute>
           ),
         },

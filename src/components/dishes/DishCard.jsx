@@ -115,6 +115,7 @@ export default function DishCard({ data, onDelete }) {
             </h3>
             <p className="text-gray-300 text-sm line-clamp-2">
               {data?.description}
+              
             </p>
           </div>
 

@@ -214,7 +214,7 @@ export default function EditCategory() {
     mutationFn: ({ formData }) => updateCategory(id, formData, token),
     onSuccess: (data) => {
       toast.success("Category updated successfully");
-      navigate("/managment");
+      navigate("/categories");
     },
     onError: (error) => {
       // Handle different types of errors
@@ -314,7 +314,7 @@ export default function EditCategory() {
 
   const confirmCancel = () => {
     setShowCancelModal(false);
-    navigate("/managment");
+    navigate("/categories");
   };
 
   // Loading state - also check for missing token

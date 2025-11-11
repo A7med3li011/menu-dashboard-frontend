@@ -240,7 +240,7 @@ export default function IngredientAdd() {
 
             {/* Price */}
             <div className="w-full">
-              <label className="block font-semibold mb-2">Price *</label>
+              <label className="block font-semibold mb-2">Price (EG) *</label>
               <input
                 type="text"
                 name="price"
@@ -348,7 +348,7 @@ export default function IngredientAdd() {
             </li>
             <li>
               • Price should be accurate and include currency considerations
-              (max $9999.99)
+              (max EG 9999.99)
             </li>
             <li>• Image should be clear and represent the ingredient well</li>
             <li>• Supported formats: JPG, PNG, GIF, WebP (max 5MB)</li>

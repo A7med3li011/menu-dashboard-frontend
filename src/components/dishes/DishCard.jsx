@@ -46,8 +46,8 @@ export default function DishCard({ data, onDelete }) {
   };
 
   const ingredientsList = parseIngredients(data?.ingredients);
-  const displayIngredients = ingredientsList; // Show first 3 ingredients
-  const hasMoreIngredients = ingredientsList.length > 6;
+  const displayIngredients = ingredientsList.slice(0, 5); // Show first 5 ingredients
+  const hasMoreIngredients = ingredientsList.length > 5;
   const extrasList = parseExtras(data?.extras);
 
   const handleDeleteClick = () => {
@@ -80,7 +80,7 @@ export default function DishCard({ data, onDelete }) {
 
   return (
     <>
-      <div className="group bg-secondary rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-700/20 hover:border-popular/30  flex flex-col ">
+      <div className="group bg-secondary rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-700/20 hover:border-popular/30 flex flex-col h-full">
         {/* Image Container */}
         <div className="relative overflow-hidden">
           <img
@@ -118,22 +118,7 @@ export default function DishCard({ data, onDelete }) {
             </p>
           </div>
 
-          <div className="space-y-3  h-[250px]">
-            {/* Kitchen Info */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
-                <ChefHat className="w-4 h-4 text-popular" />
-              </div>
-              <div className="flex-1">
-                <span className="text-gray-300 text-sm font-medium">
-                  Kitchen
-                </span>
-                <p className="text-white font-semibold">
-                  {data?.kitchen?.name}
-                </p>
-              </div>
-            </div>
-
+          <div className="space-y-3 flex-1 min-h-[320px]">
             {/* Category */}
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
@@ -150,65 +135,92 @@ export default function DishCard({ data, onDelete }) {
             </div>
 
             {/* Ingredients Preview */}
-            {displayIngredients.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-gray-300 text-sm font-medium">
-                  Main Ingredients
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {displayIngredients.map((ingredient, index) => (
-                    <span
-                      key={index}
-                      className="bg-popular/10 text-popular px-2 py-1 rounded-full text-xs font-medium border border-popular/20"
-                    >
-                      {ingredient}
-                    </span>
-                  ))}
-                  {hasMoreIngredients && (
-                    <span className="bg-gray-600/20 text-gray-300 px-2 py-1 rounded-full text-xs font-medium">
-                      +{ingredientsList.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+            <div className="space-y-2 min-h-[80px]">
+              {displayIngredients.length > 0 ? (
+                <>
+                  <span className="text-gray-300 text-sm font-medium">
+                    Main Ingredients
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {displayIngredients.map((ingredient, index) => (
+                      <span
+                        key={index}
+                        className="bg-popular/10 text-popular px-2 py-1 rounded-full text-xs font-medium border border-popular/20"
+                      >
+                        {ingredient}
+                      </span>
+                    ))}
+                    {hasMoreIngredients && (
+                      <span className="bg-gray-600/20 text-gray-300 px-2 py-1 rounded-full text-xs font-medium">
+                        +{ingredientsList.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-gray-500 text-xs italic">No ingredients listed</div>
+              )}
+            </div>
 
             {/* Extras Section */}
-            {extrasList.length > 0 && (
-              <div className="space-y-2 pt-3 border-t border-gray-700/50">
-                <span className="text-gray-300 text-sm font-medium flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4 text-popular"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Available Extras
-                </span>
-                <div className="space-y-1">
-                  {extrasList.map((extra, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-popular/5 px-2 py-1.5 rounded-md border border-popular/10"
-                    >
-                      <span className="text-white text-xs font-medium">
-                        {extra.name}
-                      </span>
-                      <span className="text-popular text-xs font-semibold">
-                        +{extra.price} EG
-                      </span>
+            <div className="space-y-2 pt-3 border-t border-gray-700/50 min-h-[140px]">
+              {extrasList.length > 0 ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-6 h-6 bg-popular/20 rounded-md">
+                      <svg
+                        className="w-3.5 h-3.5 text-popular"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    <span className="text-gray-300 text-sm font-semibold">
+                      Available Extras ({extrasList.length})
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {extrasList.slice(0, 3).map((extra, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-gradient-to-r from-popular/10 to-popular/5 hover:from-popular/15 hover:to-popular/10 px-3 py-2 rounded-lg border border-popular/20 hover:border-popular/30 transition-all duration-200 group"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-popular flex-shrink-0"></div>
+                          <span className="text-white text-xs font-medium truncate group-hover:text-popular transition-colors">
+                            {extra.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <span className="text-popular text-xs font-bold">
+                            +{extra.price}
+                          </span>
+                          <span className="text-popular/70 text-[10px] font-medium">
+                            EG
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {extrasList.length > 3 && (
+                      <div className="text-center pt-1">
+                        <span className="text-xs text-gray-400 bg-gray-700/30 px-3 py-1 rounded-full">
+                          +{extrasList.length - 3} more extras
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-gray-500 text-xs italic">No extras available</div>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons */}

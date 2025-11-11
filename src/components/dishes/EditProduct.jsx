@@ -5,6 +5,7 @@ import {
   getProductById,
   updateProduct,
   getCategories,
+  getSubcategories,
   imageBase,
 } from "../../services/apis";
 import { useNavigate, useParams } from "react-router-dom";
@@ -30,7 +31,9 @@ const createProductSchema = (isEdit, hasExistingImage) =>
       .min(0.01, "Price must be at least $0.01"),
     priceAfterDiscount: Yup.number()
       .nullable()
-      .transform((value, originalValue) => (originalValue === "" ? null : value))
+      .transform((value, originalValue) =>
+        originalValue === "" ? null : value
+      )
       .positive("Price after discount must be positive")
       .min(0.01, "Price after discount must be at least 0.01")
       .max(9999.99, "Price after discount cannot exceed 9999.99")
@@ -43,9 +46,8 @@ const createProductSchema = (isEdit, hasExistingImage) =>
         }
       ),
     category: Yup.string().required("Category is required"),
-    ingredients: Yup.array()
-      .min(1, "At least one ingredient must be added")
-      .required("Ingredients are required"),
+    subCategory: Yup.string().required("Subcategory is required"),
+    ingredients: Yup.array(),
     extras: Yup.array()
       .of(
         Yup.object().shape({
@@ -58,7 +60,7 @@ const createProductSchema = (isEdit, hasExistingImage) =>
             .required("Extra price is required")
             .positive("Price must be positive")
             .min(0.01, "Price must be at least 0.01")
-            .max(999.99, "Price cannot exceed 999.99")
+            .max(999.99, "Price cannot exceed 999.99"),
         })
       )
       .max(10, "Maximum 10 extras allowed"),
@@ -91,6 +93,7 @@ export default function EditProduct() {
   const [existingImagePath, setExistingImagePath] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [validationSchema, setValidationSchema] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const { id } = useParams();
   const token = useSelector((store) => store.user.token);
   const navigate = useNavigate();
@@ -109,6 +112,7 @@ export default function EditProduct() {
       price: "",
       priceAfterDiscount: "",
       category: "",
+      subCategory: "",
       ingredients: [],
       extras: [],
       image: null,
@@ -154,6 +158,13 @@ export default function EditProduct() {
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(token),
+  });
+
+  // Fetch subcategories based on selected category
+  const { data: subcategoriesData, isLoading: subcategoryLoading } = useQuery({
+    queryKey: ["subcategories", selectedCategory],
+    queryFn: () => getSubcategories(selectedCategory, token),
+    enabled: !!selectedCategory,
   });
 
   // Fetch product data for editing
@@ -263,6 +274,11 @@ export default function EditProduct() {
           formik.setFieldValue("image", null);
         }
 
+        // Set the selected category to enable subcategory fetching
+        if (product.category?._id) {
+          setSelectedCategory(product.category._id);
+        }
+
         // Set all form values with safe defaults
         formik.setValues({
           title: product.title || "",
@@ -270,6 +286,7 @@ export default function EditProduct() {
           price: product.price || "",
           priceAfterDiscount: product.priceAfterDiscount || "",
           category: product.category?._id || "",
+          subCategory: product.subCategory?._id || product.subcategory?._id || "",
           ingredients: ingredients,
           extras: extras,
           image: product.image ? "EXISTING_IMAGE_PLACEHOLDER" : null,
@@ -429,6 +446,14 @@ export default function EditProduct() {
   const confirmCancel = () => {
     setShowCancelModal(false);
     navigate("/products");
+  };
+
+  // Handle category change
+  const handleCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    setSelectedCategory(categoryId);
+    formik.setFieldValue("category", categoryId);
+    formik.setFieldValue("subcategory", ""); // Reset subcategory when category changes
   };
 
   // Loading state
@@ -593,7 +618,7 @@ export default function EditProduct() {
                 htmlFor="price"
                 className="block text-white font-medium mb-2"
               >
-                Price ($)
+                Price (EG)
               </label>
               <input
                 id="price"
@@ -623,7 +648,7 @@ export default function EditProduct() {
                 htmlFor="priceAfterDiscount"
                 className="block text-white font-medium mb-2"
               >
-                Price After Discount ($) - Optional
+                Price After Discount (EG) - Optional
               </label>
               <input
                 id="priceAfterDiscount"
@@ -663,7 +688,7 @@ export default function EditProduct() {
               <select
                 id="category"
                 name="category"
-                onChange={formik.handleChange}
+                onChange={handleCategoryChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.category}
                 className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
@@ -688,10 +713,51 @@ export default function EditProduct() {
               )}
             </div>
 
+            {/* Subcategory */}
+            <div>
+              <label
+                htmlFor="subCategory"
+                className="block text-white font-medium mb-2"
+              >
+                Subcategory
+              </label>
+              <select
+                id="subCategory"
+                name="subCategory"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.subCategory}
+                disabled={!selectedCategory}
+                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.subCategory && formik.errors.subCategory
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } ${!selectedCategory ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <option value="" disabled>
+                  {!selectedCategory
+                    ? "Select a category first"
+                    : subcategoryLoading
+                    ? "Loading..."
+                    : "Choose subcategory"}
+                </option>
+                {subcategoriesData?.map((subcategory) => (
+                  <option key={subcategory._id} value={subcategory._id}>
+                    {subcategory.title}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.subCategory && formik.errors.subCategory && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.subCategory}
+                </p>
+              )}
+            </div>
+
             {/* Ingredients Section */}
             <div>
               <label className="block text-white font-medium mb-2">
-                Ingredients
+                Ingredients - Optional
               </label>
 
               <div className="flex gap-2 mb-4">
@@ -754,7 +820,9 @@ export default function EditProduct() {
                         <input
                           type="text"
                           value={extra.name}
-                          onChange={(e) => handleUpdateExtra(index, "name", e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateExtra(index, "name", e.target.value)
+                          }
                           onBlur={formik.handleBlur}
                           placeholder={`Extra name ${index + 1}`}
                           className={`w-full px-4 py-2 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
@@ -775,7 +843,9 @@ export default function EditProduct() {
                         <input
                           type="number"
                           value={extra.price}
-                          onChange={(e) => handleUpdateExtra(index, "price", e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateExtra(index, "price", e.target.value)
+                          }
                           onBlur={formik.handleBlur}
                           placeholder="Price"
                           step="0.01"

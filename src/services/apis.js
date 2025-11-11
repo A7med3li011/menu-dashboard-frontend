@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
-export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-// export const baseUrl = `http://localhost:3001/api/v1`;
-// export const imageBase = `http://localhost:3001/uploads/`;
+// export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+// export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
+export const baseUrl = `http://localhost:3001/api/v1`;
+export const imageBase = `http://localhost:3001/uploads/`;
 
 // ==================== AUTHENTICATION ====================
 export async function login_staff(body) {
@@ -58,8 +58,59 @@ export async function deleteCategory(categoryId, token) {
 }
 
 // ==================== SUBCATEGORIES ====================
-// Subcategory functionality has been removed
-// Products now connect directly to categories
+export async function getSubcategories(categoryId, token) {
+  const { data } = await axios.get(`${baseUrl}/subcategory/category/${categoryId}/`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data?.data;
+}
+
+export async function createSubcategory(payload, token) {
+  const { data } = await axios.post(`${baseUrl}/subcategory/`, payload, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function getAllSubcategories(token) {
+  const { data } = await axios.get(`${baseUrl}/subcategory/`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data?.data;
+}
+
+export async function getSubcategoryById(id, token) {
+  const { data } = await axios.get(`${baseUrl}/subcategory/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function updateSubcategory(id, payload, token) {
+  const { data } = await axios.put(`${baseUrl}/subcategory/${id}`, payload, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
+
+export async function deleteSubcategory(id, token) {
+  const { data } = await axios.delete(`${baseUrl}/subcategory/${id}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
 
 // ==================== PRODUCTS ====================
 export async function getproducts(token) {

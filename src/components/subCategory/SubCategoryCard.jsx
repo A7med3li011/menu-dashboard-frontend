@@ -1,7 +1,7 @@
 import { AlertTriangle, Utensils, X, Loader2, Gift } from "lucide-react";
 import {
   imageBase,
-  deleteSubCategory,
+  deleteSubcategory,
   getproductsBysubCat,
 } from "../../services/apis";
 import { useState } from "react";
@@ -26,7 +26,7 @@ export default function SubCategoryCard({ data, onDelete }) {
   const handleDeleteClick = async () => {
     setIsDeleting(true);
     try {
-      await deleteSubCategory(data?._id, token);
+      await deleteSubcategory(data?._id, token);
       toast.success("SubCategory deleted successfully");
       if (onDelete) {
         onDelete(data?._id);

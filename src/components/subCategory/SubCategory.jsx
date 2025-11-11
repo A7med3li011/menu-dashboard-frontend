@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  getCategories,
-  getsubCategoryies,
-  getproductsBysubCat,
+  getAllSubcategories,
 } from "../../services/apis";
 import SubCategoryCard from "./SubCategoryCard";
 import { Plus, Grid3X3, Loader2 } from "lucide-react";
@@ -15,8 +13,8 @@ export default function SubCategory() {
   const navigate = useNavigate();
   const token = useSelector((store) => store.user.token);
   const { data, isLoading } = useQuery({
-    queryKey: ["get-sub-Categotys"],
-    queryFn: () => getsubCategoryies(token),
+    queryKey: ["get-subcategories"],
+    queryFn: () => getAllSubcategories(token),
     refetchOnWindowFocus: false,
   });
 
@@ -76,7 +74,7 @@ export default function SubCategory() {
           </div>
 
           <button
-            onClick={() => navigate("/add-sub-category")}
+            onClick={() => navigate("/add-subcategory")}
             className="bg-popular hover:bg-popular/90 text-white py-3 px-6 flex items-center gap-3 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
           >
             <Plus

@@ -3,16 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { ChefHat, Coins, ArrowLeft, Tag, Layers } from "lucide-react";
+import { ChefHat, Coins, ArrowLeft, Tag, FolderTree } from "lucide-react";
 import {
-  getCategory,
-  getsubCategoryByCategorie,
+  getSubcategoryById,
   getproductsBysubCat,
   imageBase,
 } from "../../services/apis.js";
 
-const ViewCategoryDetails = () => {
-  const { id: categoryId } = useParams();
+const ViewSubcategoryDetails = () => {
+  const { id: subcategoryId } = useParams();
   const navigate = useNavigate();
   const token = useSelector((store) => store.user.token);
 
@@ -23,44 +22,32 @@ const ViewCategoryDetails = () => {
     }
   }, [token, navigate]);
 
-  const { data: categoryData, isLoading: categoryLoading } = useQuery({
-    queryKey: ["category", categoryId],
-    queryFn: () => getCategory(categoryId, token),
-    enabled: !!categoryId && !!token,
+  // Fetch subcategory data
+  const { data: subcategoryData, isLoading: subcategoryLoading } = useQuery({
+    queryKey: ["subcategory", subcategoryId],
+    queryFn: () => getSubcategoryById(subcategoryId, token),
+    enabled: !!subcategoryId && !!token,
   });
 
-  const { data: subCategoriesData, isLoading: subCategoriesLoading } = useQuery(
-    {
-      queryKey: ["subcategories", categoryId],
-      queryFn: () => getsubCategoryByCategorie(categoryId, token),
-      enabled: !!categoryId && !!token,
-    }
-  );
+  // --- DATA EXTRACTION ---
+  const subcategory = subcategoryData?.data || subcategoryData;
 
-  const category = categoryData?.data || categoryData;
-  const subCategories = subCategoriesData?.data || [];
-
-  const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ["products", categoryId, subCategories.map((s) => s._id)],
-    queryFn: async () => {
-      if (subCategories.length === 0) return [];
-      const productPromises = subCategories.map((sub) =>
-        getproductsBysubCat(sub._id, token)
-      );
-      const results = await Promise.all(productPromises);
-      return results.flatMap((response) => response.data || []);
-    },
-    enabled: !!token && subCategories.length > 0,
-    initialData: [],
+  // Fetch products for this subcategory
+  const { data: productsData, isLoading: productsLoading } = useQuery({
+    queryKey: ["products-by-subcategory", subcategoryId],
+    queryFn: () => getproductsBysubCat(subcategoryId, token),
+    enabled: !!subcategoryId && !!token,
   });
+
+  const products = productsData?.data || productsData || [];
 
   const handleGoBack = () => navigate(-1);
-  const isLoading = categoryLoading || subCategoriesLoading;
+  const isLoading = subcategoryLoading;
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-primary p-6 flex items-center justify-center">
-        <div className="text-white text-lg">Loading category details...</div>
+        <div className="text-white text-lg">Loading subcategory details...</div>
       </div>
     );
   }
@@ -78,81 +65,64 @@ const ViewCategoryDetails = () => {
               Back
             </button>
             <h1 className="text-3xl font-bold text-white text-center flex-1">
-              {category?.title || "Category Details"}
+              {subcategory?.title || "Subcategory Details"}
             </h1>
             <div className="w-16"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-popular/10 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Tag className="w-5 h-5 text-blue-400 mr-2" />
-                <h3 className="text-lg font-semibold text-white">Category</h3>
-              </div>
-              <div className="flex items-center space-x-4">
-                {category?.image && (
-                  <img
-                    src={`${imageBase}${category.image}`}
-                    alt={category.title}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                )}
-                <div>
-                  <p className="text-white font-medium">{category?.title}</p>
-                  <p className="text-gray-400 text-sm">
-                    {subCategories.length} Subcategories
-                  </p>
-                </div>
-              </div>
+          {/* --- Subcategory Info --- */}
+          <div className="bg-popular/10 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <FolderTree className="w-6 h-6 text-blue-400 mr-3" />
+              <h3 className="text-xl font-semibold text-white">Subcategory Information</h3>
             </div>
-
-            <div className="bg-popular/10 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Layers className="w-5 h-5 text-popular mr-2" />
-                <h3 className="text-lg font-semibold text-white">
-                  Subcategories
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {subCategories.length > 0 ? (
-                  subCategories.map((sub) => (
-                    <span
-                      key={sub._id}
-                      className="px-3 py-1 bg-primary text-white text-sm rounded-full"
-                    >
-                      {sub.title}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm">
-                    No subcategories found.
-                  </p>
-                )}
+            <div className="flex items-center space-x-6">
+              {subcategory?.image && (
+                <img
+                  src={`${imageBase}${subcategory.image}`}
+                  alt={subcategory.title}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
+              )}
+              <div>
+                <p className="text-white font-medium text-lg">{subcategory?.title}</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Parent Category: {subcategory?.category?.title || 'N/A'}
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  {products?.length || 0} {products?.length === 1 ? 'Product' : 'Products'}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         <h2 className="text-2xl font-bold text-white mb-6">
-          Products in this Category ({products.length})
+          Products in this Subcategory ({products?.length || 0})
         </h2>
         {productsLoading && (
           <div className="text-white text-center py-8">Loading products...</div>
         )}
 
-        {!productsLoading && products.length === 0 ? (
+        {!productsLoading && (!products || products.length === 0) ? (
           <div className="bg-secondary rounded-lg shadow-lg p-8 text-center">
             <ChefHat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">
               No Products Found
             </h3>
             <p className="text-gray-400">
-              There are no products available in this category's subcategories.
+              There are no products available in this subcategory.
             </p>
+            <button
+              onClick={() => navigate('/add-dish')}
+              className="mt-4 bg-popular hover:bg-popular/90 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Add Product
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {products?.map((product) => (
               <div
                 key={product._id}
                 className="bg-secondary rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
@@ -232,26 +202,53 @@ const ViewCategoryDetails = () => {
 
                     {product.extras && product.extras.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-white text-sm font-medium mb-1">
-                          Extras:
-                        </h4>
-                        <div className="space-y-1">
-                          {product.extras.slice(0, 2).map((extra) => (
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center justify-center w-5 h-5 bg-popular/20 rounded-md">
+                            <svg
+                              className="w-3 h-3 text-popular"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                              />
+                            </svg>
+                          </div>
+                          <h4 className="text-white text-sm font-semibold">
+                            Available Extras ({product.extras.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-1.5">
+                          {product.extras.slice(0, 3).map((extra) => (
                             <div
                               key={extra._id}
-                              className="flex justify-between text-xs"
+                              className="flex items-center justify-between bg-gradient-to-r from-popular/10 to-popular/5 hover:from-popular/15 hover:to-popular/10 px-2.5 py-1.5 rounded-lg border border-popular/20 hover:border-popular/30 transition-all duration-200 group"
                             >
-                              <span className="text-gray-300">
-                                {extra.name}
-                              </span>
-                              <span className="text-popular">
-                                +{extra.price} EG
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                <div className="w-1 h-1 rounded-full bg-popular flex-shrink-0"></div>
+                                <span className="text-white text-xs font-medium truncate group-hover:text-popular transition-colors">
+                                  {extra.name}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                <span className="text-popular text-xs font-bold">
+                                  +{extra.price}
+                                </span>
+                                <span className="text-popular/70 text-[10px] font-medium">
+                                  EG
+                                </span>
+                              </div>
                             </div>
                           ))}
-                          {product.extras.length > 2 && (
-                            <div className="text-xs text-gray-400">
-                              +{product.extras.length - 2} more extras
+                          {product.extras.length > 3 && (
+                            <div className="text-center pt-0.5">
+                              <span className="text-xs text-gray-400 bg-gray-700/30 px-2.5 py-0.5 rounded-full">
+                                +{product.extras.length - 3} more
+                              </span>
                             </div>
                           )}
                         </div>
@@ -299,4 +296,4 @@ const ViewCategoryDetails = () => {
   );
 };
 
-export default ViewCategoryDetails;
+export default ViewSubcategoryDetails;

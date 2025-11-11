@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { getReviews } from "../services/apis";
-import { Star, MessageSquare, User, Calendar } from "lucide-react";
+import { Star, MessageSquare, User, Calendar, Phone, CheckCircle, XCircle, Utensils, Sparkles } from "lucide-react";
 
 export default function Reviews() {
   const token = useSelector((store) => store.user.token);
@@ -37,11 +37,21 @@ export default function Reviews() {
     return stars;
   };
 
-  // Calculate average rating
+  // Calculate average rating for overall rating
   const calculateAverageRating = () => {
     if (!reviews || !Array.isArray(reviews) || reviews.length === 0) return 0;
     const sum = reviews.reduce(
-      (acc, review) => acc + Number(review.rate || 0),
+      (acc, review) => acc + Number(review.overallRating || review.rate || 0),
+      0
+    );
+    return (sum / reviews.length).toFixed(1);
+  };
+
+  // Calculate average for specific rating type
+  const calculateAverageForRating = (ratingKey) => {
+    if (!reviews || !Array.isArray(reviews) || reviews.length === 0) return 0;
+    const sum = reviews.reduce(
+      (acc, review) => acc + Number(review[ratingKey] || 0),
       0
     );
     return (sum / reviews.length).toFixed(1);
@@ -86,7 +96,7 @@ export default function Reviews() {
         {/* Statistics Card */}
         {reviews && Array.isArray(reviews) && reviews.length > 0 && (
           <div className="bg-secondary rounded-lg shadow-lg p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="text-center">
                 <div className="text-4xl font-bold text-popular mb-2">
                   {reviews.length}
@@ -98,13 +108,27 @@ export default function Reviews() {
                   {calculateAverageRating()}
                   <Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
                 </div>
-                <div className="text-gray-300 text-sm">Average Rating</div>
+                <div className="text-gray-300 text-sm">Overall Rating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-popular mb-2 flex items-center justify-center gap-2">
+                  {calculateAverageForRating('tasteRating')}
+                  <Utensils className="w-8 h-8 text-orange-400" />
+                </div>
+                <div className="text-gray-300 text-sm">Taste Rating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-popular mb-2 flex items-center justify-center gap-2">
+                  {calculateAverageForRating('hygieneRating')}
+                  <Sparkles className="w-8 h-8 text-blue-400" />
+                </div>
+                <div className="text-gray-300 text-sm">Hygiene Rating</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-popular mb-2">
-                  {reviews.filter((r) => Number(r.rate) >= 4).length}
+                  {reviews.filter((r) => r.wouldComeBack === true).length}
                 </div>
-                <div className="text-gray-300 text-sm">Positive Reviews</div>
+                <div className="text-gray-300 text-sm">Would Return</div>
               </div>
             </div>
           </div>
@@ -122,7 +146,7 @@ export default function Reviews() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {Array.isArray(reviews) && reviews.map((review, index) => (
               <div
                 key={index}
@@ -139,19 +163,89 @@ export default function Reviews() {
                         <h3 className="text-lg font-semibold text-white">
                           {review.name || "Anonymous"}
                         </h3>
-                        <div className="flex gap-1 mt-1">
-                          {renderStars(review.rate)}
-                        </div>
+                        {review.mobileNumber && (
+                          <div className="flex items-center gap-1 text-gray-400 text-sm mt-1">
+                            <Phone className="w-3 h-3" />
+                            <span>{review.mobileNumber}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
+                    {/* Would Come Back Badge */}
+                    {review.wouldComeBack !== undefined && (
+                      <div className="flex items-center gap-1">
+                        {review.wouldComeBack ? (
+                          <div className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Would Return</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs">
+                            <XCircle className="w-3 h-3" />
+                            <span>Won't Return</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Comment */}
-                  <div className="mb-4">
-                    <p className="text-gray-300 text-sm leading-relaxed">
-                      {review.comment || "No comment provided"}
-                    </p>
+                  {/* Ratings Section */}
+                  <div className="mb-4 space-y-3">
+                    {/* Overall Rating */}
+                    {(review.overallRating || review.rate) && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">Overall Rating:</span>
+                        <div className="flex gap-1">
+                          {renderStars(review.overallRating || review.rate)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Taste Rating */}
+                    {review.tasteRating && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm flex items-center gap-1">
+                          <Utensils className="w-4 h-4 text-orange-400" />
+                          Taste:
+                        </span>
+                        <div className="flex gap-1">
+                          {renderStars(review.tasteRating)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Hygiene Rating */}
+                    {review.hygieneRating && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm flex items-center gap-1">
+                          <Sparkles className="w-4 h-4 text-blue-400" />
+                          Hygiene:
+                        </span>
+                        <div className="flex gap-1">
+                          {renderStars(review.hygieneRating)}
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Additional Comments */}
+                  {review.additionalComments && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-white mb-2">Comments:</h4>
+                      <p className="text-gray-300 text-sm leading-relaxed bg-primary/30 p-3 rounded-lg">
+                        {review.additionalComments}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Legacy comment field for backwards compatibility */}
+                  {!review.additionalComments && review.comment && (
+                    <div className="mb-4">
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        {review.comment}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Footer */}
                   <div className="flex items-center gap-2 text-gray-400 text-xs pt-4 border-t border-gray-700">

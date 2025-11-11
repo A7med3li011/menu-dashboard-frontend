@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createSubCategory, getCategories } from "../../services/apis";
+import { createSubcategory, getCategories } from "../../services/apis";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -45,13 +45,13 @@ export default function SubCategoryAdd() {
   // Mutation for creating subcategory
   const { mutate, isLoading: isSubmitting } = useMutation({
     mutationKey: ["create-subcategory"],
-    mutationFn: (payload) => createSubCategory(payload, token),
+    mutationFn: (payload) => createSubcategory(payload, token),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["get-categories"],
       });
       toast.success("Sub category created successfully");
-      navigate("/managment");
+      navigate("/subcategories");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to create sub category");

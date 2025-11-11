@@ -13,6 +13,12 @@ import CategoryAdd from "./components/category/CategoryAdd";
 import EditCategory from "./components/category/EditCategory";
 import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
+// Subcategories
+import Subcategories from "./pages/Subcategories";
+import SubcategoryAdd from "./components/subcategory/SubcategoryAdd";
+import EditSubcategory from "./components/subCategory/EditSubCategory";
+import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails";
+
 // Products
 import Products from "./pages/Products";
 import DishAdd from "./components/dishes/DishAdd";
@@ -89,6 +95,40 @@ function App() {
           element: (
             <RoleBasedRoute allowedRoles={["admin"]}>
               <ViewCategoryDetails />
+            </RoleBasedRoute>
+          ),
+        },
+
+        // Subcategories Routes
+        {
+          path: "/subcategories",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <Subcategories />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/add-subcategory",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <SubcategoryAdd />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/subcategory/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <EditSubcategory />
+            </RoleBasedRoute>
+          ),
+        },
+        {
+          path: "/subcategoryDetails/:id",
+          element: (
+            <RoleBasedRoute allowedRoles={["admin"]}>
+              <ViewSubcategoryDetails />
             </RoleBasedRoute>
           ),
         },

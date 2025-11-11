@@ -517,7 +517,7 @@ export default function EditIngredient() {
                 htmlFor="price"
                 className="block text-white font-medium mb-2"
               >
-                Price
+                Price (EG)
               </label>
               <input
                 id="naem"

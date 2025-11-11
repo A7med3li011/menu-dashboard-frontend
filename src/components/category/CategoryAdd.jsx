@@ -91,7 +91,7 @@ export default function CategoryAdd() {
         queryKey: ["get-Categotys"],
       });
       toast.success("category created successfully");
-      navigate("/managment");
+      navigate("/categories");
     },
   });
   return (

@@ -3,10 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { ChefHat, Coins, ArrowLeft, Tag, Layers } from "lucide-react";
+import { ChefHat, Coins, ArrowLeft, Tag, Layers, FolderTree } from "lucide-react";
 import {
   getCategory,
-  getproducts,
+  getSubcategories,
   imageBase,
 } from "../../services/apis.js";
 
@@ -32,17 +32,12 @@ const ViewCategoryDetails = () => {
   // --- DATA EXTRACTION ---
   const category = categoryData?.data || categoryData;
 
-  // 2. Fetch All Products
-  const { data: allProducts, isLoading: productsLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getproducts(token),
-    enabled: !!token,
+  // 2. Fetch Subcategories for this category
+  const { data: subcategories, isLoading: subcategoriesLoading } = useQuery({
+    queryKey: ["subcategories", categoryId],
+    queryFn: () => getSubcategories(categoryId, token),
+    enabled: !!categoryId && !!token,
   });
-
-  // Filter products by category
-  const products = allProducts?.filter(
-    (product) => product.category?._id === categoryId
-  ) || [];
 
   const handleGoBack = () => navigate(-1);
   const isLoading = categoryLoading;
@@ -91,142 +86,126 @@ const ViewCategoryDetails = () => {
               <div>
                 <p className="text-white font-medium text-lg">{category?.title}</p>
                 <p className="text-gray-400 text-sm mt-1">
-                  {products.length} {products.length === 1 ? 'Product' : 'Products'}
+                  {subcategories?.length || 0} {subcategories?.length === 1 ? 'Subcategory' : 'Subcategories'}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* --- Products Grid --- */}
+        {/* --- Subcategories Grid --- */}
         <h2 className="text-2xl font-bold text-white mb-6">
-          Products in this Category ({products.length})
+          Subcategories in this Category ({subcategories?.length || 0})
         </h2>
-        {productsLoading && (
-          <div className="text-white text-center py-8">Loading products...</div>
+        {subcategoriesLoading && (
+          <div className="text-white text-center py-8">Loading subcategories...</div>
         )}
 
-        {!productsLoading && products.length === 0 ? (
+        {!subcategoriesLoading && (!subcategories || subcategories.length === 0) ? (
           <div className="bg-secondary rounded-lg shadow-lg p-8 text-center">
-            <ChefHat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <FolderTree className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">
-              No Products Found
+              No Subcategories Found
             </h3>
             <p className="text-gray-400">
-              There are no products available in this category.
+              There are no subcategories available in this category.
             </p>
+            <button
+              onClick={() => navigate('/add-subcategory')}
+              className="mt-4 bg-popular hover:bg-popular/90 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Add Subcategory
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {/* ================================================================== */}
-            {/* --- START: Product Card JSX --- */}
+            {/* --- START: Subcategory Card JSX --- */}
             {/* ================================================================== */}
-            {products.map((product) => (
+            {subcategories?.map((subcategory) => (
               <div
-                key={product._id}
-                className="bg-secondary rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
+                key={subcategory._id}
+                className="bg-secondary rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-gray-700/20 hover:border-popular/30"
               >
-                {/* Product Image */}
-                <div className="relative h-48 bg-gray-700">
-                  {product.image ? (
+                {/* Subcategory Image */}
+                <div className="relative h-48 bg-gray-700 overflow-hidden">
+                  {subcategory.image ? (
                     <img
-                      src={`${imageBase}${product.image}`}
-                      alt={product.title}
-                      className="w-full h-full object-cover"
+                      src={`${imageBase}${subcategory.image}`}
+                      alt={subcategory.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-600">
-                      <ChefHat className="w-12 h-12 text-white" />
+                      <FolderTree className="w-12 h-12 text-white" />
                     </div>
                   )}
-                  <div
-                    className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium text-white ${
-                      product.available ? "bg-popular" : "bg-red-500"
-                    }`}
-                  >
-                    {product.available ? "Available" : "Unavailable"}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent group-hover:from-black/40 transition-all duration-300"></div>
+
+                  {/* Floating badge */}
+                  <div className="absolute top-3 right-3 bg-popular/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
+                    Subcategory
                   </div>
                 </div>
 
-                {/* Product Details */}
-                <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="text-lg font-semibold text-white mb-2 truncate">
-                    {product.title}
+                {/* Subcategory Details */}
+                <div className="p-5 flex flex-col flex-grow space-y-4">
+                  <h3 className="text-xl font-bold text-white group-hover:text-popular transition-colors duration-300 leading-tight">
+                    {subcategory.title}
                   </h3>
 
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
-                    {product.description}
-                  </p>
-
-                  {/* Kitchen Info */}
-                  {product.kitchen?.name && (
-                    <div className="flex items-center text-gray-300 text-sm mb-3">
-                      <ChefHat className="w-4 h-4 mr-2 text-popular" />
-                      <span>{product.kitchen.name}</span>
+                  <div className="space-y-3">
+                    {/* Category */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
+                        <Tag className="w-4 h-4 text-popular" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-gray-300 text-sm font-medium">
+                          Parent Category
+                        </span>
+                        <p className="text-white font-semibold">
+                          {subcategory.category?.title || category?.title}
+                        </p>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Price */}
-                  <div className="flex items-center text-popular font-semibold text-lg mb-4">
-                    <Coins className="w-5 h-5 mr-2" />
-                    <span>{product.price} EG</span>
+                    {/* Products count */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
+                        <ChefHat className="w-4 h-4 text-popular" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-gray-300 text-sm font-medium">
+                          Products
+                        </span>
+                        <p className="text-white font-semibold">
+                          {subcategory.products || 0}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Ingredients */}
-                  {product.ingredients && product.ingredients.length > 0 && (
-                    <div className="mb-3">
-                      <h4 className="text-white text-sm font-medium mb-2">
-                        Ingredients:
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {product.ingredients.slice(0, 3).map((ing, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 bg-popular/10 text-popular text-xs rounded-full"
-                          >
-                            {ing}
-                          </span>
-                        ))}
-                        {product.ingredients.length > 6 && (
-                          <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded-full">
-                            +{product.ingredients.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Extras */}
-                  {product.extras && product.extras.length > 0 && (
-                    <div className="border-t border-gray-700 pt-3 mt-3">
-                      <h4 className="text-white text-sm font-medium mb-2">
-                        Extras:
-                      </h4>
-                      <div className="space-y-1">
-                        {product.extras.slice(0, 2).map((extra) => (
-                          <div
-                            key={extra._id}
-                            className="flex justify-between text-xs"
-                          >
-                            <span className="text-gray-300">{extra.name}</span>
-                            <span className="text-popular">
-                              +{extra.price} EG
-                            </span>
-                          </div>
-                        ))}
-                        {product.extras.length > 2 && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            +{product.extras.length - 2} more...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {/* Action Buttons */}
+                  <div className="pt-2 space-y-1.5 mt-auto">
+                    <button
+                      onClick={() => navigate(`/subcategoryDetails/${subcategory._id}`)}
+                      className="w-full py-2 bg-popular/10 hover:bg-popular text-popular hover:text-white border border-popular/30 hover:border-popular rounded-lg font-medium text-sm transition-all duration-300"
+                    >
+                      View Products
+                    </button>
+                    <button
+                      onClick={() => navigate(`/subcategory/${subcategory._id}`)}
+                      className="w-full py-2 bg-popular/10 hover:bg-blue-800/20 text-popular hover:text-blue-400 border border-popular/30 hover:border-blue-500/50 rounded-lg font-medium text-sm transition-all duration-300"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
             {/* ================================================================== */}
-            {/* --- END: Product Card JSX --- */}
+            {/* --- END: Subcategory Card JSX --- */}
             {/* ================================================================== */}
           </div>
         )}

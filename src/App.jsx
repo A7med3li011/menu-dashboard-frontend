@@ -15,7 +15,7 @@ import ViewCategoryDetails from "./components/category/ViewCategoryDetails";
 
 // Subcategories
 import Subcategories from "./pages/SubCategories";
-import SubcategoryAdd from "./components/subcategory/SubcategoryAdd.jsx";
+import { SubcategoryAdd } from "./components/subcategory/SubCategoryAdd";
 import EditSubcategory from "./components/subCategory/EditSubCategory.jsx";
 import ViewSubcategoryDetails from "./components/subCategory/ViewSubCategoryDetails.jsx";
 

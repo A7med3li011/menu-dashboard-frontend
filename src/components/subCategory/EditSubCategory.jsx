@@ -2,8 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
-  getSubCategoryById,
-  updateSubCategory,
+  updateSubcategory,
   getCategories,
   imageBase,
 } from "../../services/apis";
@@ -238,10 +237,10 @@ export default function EditSubCategory() {
   // Update subcategory mutation
   const updateMutation = useMutation({
     mutationKey: ["update-subcategory"],
-    mutationFn: ({ formData }) => updateSubCategory(id, formData, token),
+    mutationFn: ({ formData }) => updateSubcategory(id, formData, token),
     onSuccess: (data) => {
       toast.success("Subcategory updated successfully");
-      navigate("/managment");
+      navigate("/subcategories");
     },
     onError: (error) => {
       console.error("Update error:", error);
@@ -345,7 +344,7 @@ export default function EditSubCategory() {
 
   const confirmCancel = () => {
     setShowCancelModal(false);
-    navigate("/managment");
+    navigate("/subcategories");
   };
 
   // Loading state - also check for missing token

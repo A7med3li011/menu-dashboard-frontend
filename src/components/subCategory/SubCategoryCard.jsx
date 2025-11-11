@@ -1,7 +1,7 @@
 import { AlertTriangle, Utensils, X, Loader2, Gift } from "lucide-react";
 import {
   imageBase,
-  deleteSubCategory,
+  deleteSubcategory,
   getproductsBysubCat,
 } from "../../services/apis";
 import { useState } from "react";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 export default function SubCategoryCard({ data, onDelete }) {
   // State for the new details modal
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [products, setProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -23,22 +24,31 @@ export default function SubCategoryCard({ data, onDelete }) {
     navigate(`/subcategory/${data?._id}`);
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteSubCategory(data?._id, token);
-      toast.success("SubCategory deleted successfully");
+      await deleteSubcategory(data?._id, token);
+      toast.success("Subcategory deleted successfully");
       if (onDelete) {
         onDelete(data?._id);
       }
+      setShowDeleteConfirm(false);
     } catch (error) {
-      toast.error("Error deleting subCategory: " + error.message);
+      toast.error("Error deleting subcategory: " + (error?.response?.data?.message || error.message));
     }
     setIsDeleting(false);
   };
 
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
+
   const handleExploreClick = () => {
-    navigate(`/subcategoryDetails/${data?._id}`);
+    navigate(`/subcategory/${data?._id}/products`);
   };
 
   return (
@@ -118,6 +128,83 @@ export default function SubCategoryCard({ data, onDelete }) {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center"
+          style={{
+            zIndex: 99999,
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          <div
+            className="bg-secondary border border-gray-700 rounded-xl p-6 shadow-2xl"
+            style={{
+              width: "500px",
+              maxWidth: "90vw",
+              position: "relative",
+            }}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">
+                  Delete Subcategory
+                </h3>
+              </div>
+              <button
+                onClick={handleCancelDelete}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="mb-6">
+              <p className="text-gray-300 mb-2">
+                Are you sure you want to delete this subcategory? This will also
+                remove all products under it.
+              </p>
+              <p className="text-white font-medium mb-2">{data?.title}</p>
+              {data?.category?.title && (
+                <p className="text-gray-400 text-sm mb-2">
+                  Category: {data.category.title}
+                </p>
+              )}
+              <p className="text-red-400 text-sm">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50 rounded-lg font-medium text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2 px-4 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 hover:text-white border border-gray-600/30 hover:border-gray-500/50 rounded-lg font-medium text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

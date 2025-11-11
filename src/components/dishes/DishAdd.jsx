@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   createProduct,
   getCategories,
+  getSubcategories,
 } from "../../services/apis";
 import { useState } from "react";
 import { useFormik } from "formik";
@@ -23,6 +24,7 @@ const validationSchema = Yup.object({
     .max(500, "Description must not exceed 500 characters")
     .trim(),
   category: Yup.string().required("Category is required"),
+  subCategory: Yup.string().required("Subcategory is required"),
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive")
@@ -88,6 +90,7 @@ const validationSchema = Yup.object({
 
 export default function DishAdd() {
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const navigate = useNavigate();
 
   // Queries
@@ -100,6 +103,17 @@ export default function DishAdd() {
   } = useQuery({
     queryKey: ["get-categories"],
     queryFn: () => getCategories(token),
+    refetchOnWindowFocus: false,
+  });
+
+  // Fetch subcategories based on selected category
+  const {
+    data: subcategoryList,
+    isLoading: subcategoryLoading,
+  } = useQuery({
+    queryKey: ["get-subcategories", selectedCategory],
+    queryFn: () => getSubcategories(selectedCategory, token),
+    enabled: !!selectedCategory,
     refetchOnWindowFocus: false,
   });
 
@@ -122,6 +136,7 @@ export default function DishAdd() {
       title: "",
       description: "",
       category: "",
+      subCategory: "",
       price: "",
       priceAfterDiscount: "",
       ingredients: [""], // Start with one empty ingredient field
@@ -222,6 +237,15 @@ export default function DishAdd() {
   const handleReset = () => {
     formik.resetForm();
     setImagePreview(null);
+    setSelectedCategory("");
+  };
+
+  // Handle category change
+  const handleCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    setSelectedCategory(categoryId);
+    formik.setFieldValue("category", categoryId);
+    formik.setFieldValue("subCategory", ""); // Reset subcategory when category changes
   };
 
   return (
@@ -295,7 +319,7 @@ export default function DishAdd() {
               <select
                 name="category"
                 value={formik.values.category}
-                onChange={formik.handleChange}
+                onChange={handleCategoryChange}
                 onBlur={formik.handleBlur}
                 className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
                   formik.touched.category && formik.errors.category
@@ -323,6 +347,45 @@ export default function DishAdd() {
               {formik.touched.category && formik.errors.category && (
                 <p className="text-red-500 text-sm mt-1">
                   {formik.errors.category}
+                </p>
+              )}
+            </div>
+
+            {/* Subcategory */}
+            <div className="w-full">
+              <label className="block font-semibold mb-2">Subcategory *</label>
+              <select
+                name="subCategory"
+                value={formik.values.subCategory}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                disabled={!selectedCategory}
+                className={`w-full bg-transparent border rounded-md py-2 px-3 border-[1px] focus:outline-none focus:ring-2 focus:ring-popular ${
+                  formik.touched.subCategory && formik.errors.subCategory
+                    ? "border-red-500"
+                    : "border-popular"
+                } ${!selectedCategory ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <option value="" className="bg-secondary">
+                  {!selectedCategory
+                    ? "Select a category first"
+                    : subcategoryLoading
+                    ? "Loading..."
+                    : "Select Subcategory"}
+                </option>
+                {subcategoryList?.map((ele) => (
+                  <option
+                    key={ele._id}
+                    className="bg-secondary"
+                    value={ele._id}
+                  >
+                    {ele?.title}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.subCategory && formik.errors.subCategory && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formik.errors.subCategory}
                 </p>
               )}
             </div>
@@ -679,7 +742,7 @@ export default function DishAdd() {
             </li>
             <li>
               • Price should be accurate and include currency considerations
-              (max $9999.99)
+              (max 9999.99 EG)
             </li>
             <li>• Image should be clear and represent the dish well</li>
             <li>• Supported formats: JPG, PNG, GIF, WebP (max 5MB)</li>

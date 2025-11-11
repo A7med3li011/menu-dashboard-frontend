@@ -5,6 +5,7 @@ import {
   getProductById,
   updateProduct,
   getCategories,
+  getSubcategories,
   imageBase,
 } from "../../services/apis";
 import { useNavigate, useParams } from "react-router-dom";
@@ -27,7 +28,7 @@ const createProductSchema = (isEdit, hasExistingImage) =>
     price: Yup.number()
       .required("Price is required")
       .positive("Price must be positive")
-      .min(0.01, "Price must be at least $0.01"),
+      .min(0.01, "Price must be at least 0.01 EG"),
     priceAfterDiscount: Yup.number()
       .nullable()
       .transform((value, originalValue) => (originalValue === "" ? null : value))
@@ -43,6 +44,7 @@ const createProductSchema = (isEdit, hasExistingImage) =>
         }
       ),
     category: Yup.string().required("Category is required"),
+    subCategory: Yup.string().required("Subcategory is required"),
     ingredients: Yup.array()
       .min(1, "At least one ingredient must be added")
       .required("Ingredients are required"),
@@ -91,6 +93,7 @@ export default function EditProduct() {
   const [existingImagePath, setExistingImagePath] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [validationSchema, setValidationSchema] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const { id } = useParams();
   const token = useSelector((store) => store.user.token);
   const navigate = useNavigate();
@@ -109,6 +112,7 @@ export default function EditProduct() {
       price: "",
       priceAfterDiscount: "",
       category: "",
+      subCategory: "",
       ingredients: [],
       extras: [],
       image: null,
@@ -154,6 +158,13 @@ export default function EditProduct() {
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(token),
+  });
+
+  // Fetch subcategories based on selected category
+  const { data: subcategoriesData, isLoading: subcategoryLoading } = useQuery({
+    queryKey: ["subcategories", selectedCategory],
+    queryFn: () => getSubcategories(selectedCategory, token),
+    enabled: !!selectedCategory,
   });
 
   // Fetch product data for editing
@@ -263,6 +274,11 @@ export default function EditProduct() {
           formik.setFieldValue("image", null);
         }
 
+        // Set the selected category to enable subcategory fetching
+        if (product.category?._id) {
+          setSelectedCategory(product.category._id);
+        }
+
         // Set all form values with safe defaults
         formik.setValues({
           title: product.title || "",
@@ -270,6 +286,7 @@ export default function EditProduct() {
           price: product.price || "",
           priceAfterDiscount: product.priceAfterDiscount || "",
           category: product.category?._id || "",
+          subCategory: product.subCategory?._id || product.subcategory?._id || "",
           ingredients: ingredients,
           extras: extras,
           image: product.image ? "EXISTING_IMAGE_PLACEHOLDER" : null,
@@ -414,6 +431,14 @@ export default function EditProduct() {
     const newExtras = [...formik.values.extras];
     newExtras[index][field] = value;
     formik.setFieldValue("extras", newExtras);
+  };
+
+  // Handle category change
+  const handleCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    setSelectedCategory(categoryId);
+    formik.setFieldValue("category", categoryId);
+    formik.setFieldValue("subCategory", "");
   };
 
   // Handle cancel with modal
@@ -663,7 +688,7 @@ export default function EditProduct() {
               <select
                 id="category"
                 name="category"
-                onChange={formik.handleChange}
+                onChange={handleCategoryChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.category}
                 className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular ${
@@ -684,6 +709,52 @@ export default function EditProduct() {
               {formik.touched.category && formik.errors.category && (
                 <p className="text-red-400 text-sm mt-1">
                   {formik.errors.category}
+                </p>
+              )}
+            </div>
+
+            {/* Subcategory */}
+            <div>
+              <label
+                htmlFor="subCategory"
+                className="block text-white font-medium mb-2"
+              >
+                Subcategory <span className="text-red-400">*</span>
+              </label>
+              <select
+                id="subCategory"
+                name="subCategory"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.subCategory}
+                disabled={!selectedCategory || subcategoryLoading}
+                className={`w-full px-4 py-3 rounded-lg border-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-popular disabled:opacity-50 disabled:cursor-not-allowed ${
+                  formik.touched.subCategory && formik.errors.subCategory
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+              >
+                <option value="" disabled>
+                  {!selectedCategory
+                    ? "Please select a category first"
+                    : subcategoryLoading
+                    ? "Loading subcategories..."
+                    : "Choose subcategory"}
+                </option>
+                {subcategoriesData?.map((subcategory) => (
+                  <option key={subcategory._id} value={subcategory._id}>
+                    {subcategory.title}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.subCategory && formik.errors.subCategory && (
+                <p className="text-red-400 text-sm mt-1">
+                  {formik.errors.subCategory}
+                </p>
+              )}
+              {!selectedCategory && (
+                <p className="text-gray-400 text-sm mt-1">
+                  Select a category to see available subcategories
                 </p>
               )}
             </div>

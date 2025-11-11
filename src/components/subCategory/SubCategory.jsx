@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   getCategories,
-  getsubCategoryies,
+  getAllSubcategories,
   getproductsBysubCat,
 } from "../../services/apis";
 import SubCategoryCard from "./SubCategoryCard";
@@ -16,7 +16,7 @@ export default function SubCategory() {
   const token = useSelector((store) => store.user.token);
   const { data, isLoading } = useQuery({
     queryKey: ["get-sub-Categotys"],
-    queryFn: () => getsubCategoryies(token),
+    queryFn: () => getAllSubcategories(token),
     refetchOnWindowFocus: false,
   });
 

@@ -192,7 +192,7 @@ export default function MenuDisplay() {
                   )}
                   {/* Price Badge */}
                   <div className="absolute top-3 right-3 bg-popular text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
-                    ${product.price?.toFixed(2)}
+                    {product.price?.toFixed(2)} EG
                   </div>
                 </div>
 
@@ -255,7 +255,7 @@ export default function MenuDisplay() {
                               {extra.name}
                             </span>
                             <span className="text-xs text-popular font-semibold">
-                              +${extra.price?.toFixed(2)}
+                              +{extra.price?.toFixed(2)} EG
                             </span>
                           </div>
                         ))}

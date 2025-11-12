@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import axios from "axios";
 import { login_staff } from "../services/apis";
 import { toast } from "react-toastify";
@@ -64,7 +64,7 @@ export default function Login() {
         })
 
         .catch((err) => toast.error(err?.response?.data?.message))
-        .finally(setLoading(false));
+        .finally(() => setLoading(false));
     }
   };
 
@@ -156,10 +156,11 @@ export default function Login() {
               disabled={loading}
               type="button"
               onClick={handleSubmit}
-              className="w-full py-3 px-4 rounded-lg font-semibold text-black transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
-              style={{ backgroundColor: "#FFBC0F" }}
+              className="w-full py-3 px-4 rounded-lg font-semibold text-black transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ backgroundColor: loading ? "#CC9800" : "#FFBC0F" }}
             >
-              Login
+              {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </div>
         </div>

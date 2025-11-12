@@ -1,8 +1,7 @@
 import axios from "axios";
 
-export const baseUrl = `https://admin.patriacoffeebeans.com/api/v1`;
+export const baseUrl = `https://api.stationonelounge.com/api/v1`;
 export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
-
 
 // export const baseUrl = `http://localhost:3001/api/v1`;
 // export const imageBase = `http://localhost:3001/uploads/`;
@@ -10,9 +9,9 @@ export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
 // ==================== AUTHENTICATION ====================
 export async function login_staff(body) {
   const { data } = await axios.post(`${baseUrl}/auth/login`, body, {
-        headers: {
-      "Content-Type": "application/json"
-  }
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   return data;
 }

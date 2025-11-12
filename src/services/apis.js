@@ -9,7 +9,11 @@ export const imageBase = `https://admin.patriacoffeebeans.com/uploads/`;
 
 // ==================== AUTHENTICATION ====================
 export async function login_staff(body) {
-  const { data } = await axios.post(`${baseUrl}/auth/login`, body, {});
+  const { data } = await axios.post(`${baseUrl}/auth/login`, body, {
+        headers: {
+      "Content-Type": "application/json"
+  }
+  });
   return data;
 }
 

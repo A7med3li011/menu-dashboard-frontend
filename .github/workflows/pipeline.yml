@@ -1,40 +1,73 @@
-name: Build and Deploy React App
+name: Build and Deploy Frontend
 
 on:
   push:
     branches: [ prod ]
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-frontend:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Set up Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 18 # or your preferred version
+        node-version: 18
+        cache: 'npm'
 
-    - name: Install dependencies and build
+    - name: Install dependencies
       run: |
         npm install
-        npm run build
 
-    - name: Install SSH key
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.HOST }}
-        username: root
-        password: ${{ secrets.PASS }}
-        port: 22
-        script: |
-          rm -rf /var/www/menu/dashboard/*
-          mkdir -p /var/www/menu/dashboard/
-
-    - name: Deploy files to server
+    - name: Build project
       run: |
-            cd dist
+        npm run build
+      env:
+        CI: false
 
-            sshpass -p "${{ secrets.PASS }}" scp -o StrictHostKeyChecking=no -P 22 -r . root@${{ secrets.HOST }}:/var/www/menu/dashboard/
+    - name: Verify build output
+      run: |
+        echo "Build contents:"
+        ls -la dist/
+        echo "Checking essential files:"
+        [ -f dist/index.html ] && echo "✅ index.html exists" || echo "❌ index.html missing"
+        [ -f dist/assets/index-*.js ] && echo "✅ JavaScript files exist" || ls -la dist/assets/ 2>/dev/null || echo "⚠️  Check asset structure"
+
+    - name: Install sshpass
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sshpass
+
+    - name: Deploy to server
+      run: |
+        # Create deployment directory on server
+        sshpass -p "${{ secrets.PASS }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "mkdir -p /var/www/menu/dashboard"
+        
+        # Copy dist folder to server
+        echo "Copying dist folder to server..."
+        sshpass -p "${{ secrets.PASS }}" scp -o StrictHostKeyChecking=no -r ./dist root@${{ secrets.HOST }}:/var/www/menu/dashboard/
+        
+        # Fix permissions and verify
+        sshpass -p "${{ secrets.PASS }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "
+          echo 'Fixing permissions...'
+          chown -R www-data:www-data /var/www/menu/dashboard/dist
+          chmod -R 755 /var/www/menu/dashboard/dist
+          
+          echo 'Verifying deployment:'
+          ls -la /var/www/menu/dashboard/dist/
+          [ -f /var/www/menu/dashboard/dist/index.html ] && echo '✅ Deployment successful' || echo '❌ Deployment failed'
+          
+          echo 'Reloading nginx...'
+          sudo nginx -t && sudo systemctl reload nginx
+          echo '✅ Nginx reloaded'
+        "
+
+    - name: Verify deployment
+      run: |
+        echo "Waiting for deployment to complete..."
+        sleep 5
+        echo "Testing deployed frontend:"
+        curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" -k https://admin.stationonelounge.com

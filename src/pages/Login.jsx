@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import axios from "axios";
 import { login_staff } from "../services/apis";
 import { toast } from "react-toastify";
@@ -64,7 +64,7 @@ export default function Login() {
         })
 
         .catch((err) => toast.error(err?.response?.data?.message))
-        .finally(setLoading(false));
+        .finally(() => setLoading(false));
     }
   };
 
@@ -104,10 +104,14 @@ export default function Login() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 bg-transparent text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-20 transition-all duration-300"
+                  disabled={loading}
+                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-600 bg-transparent text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ borderColor: errors.email ? "#ef4444" : undefined }}
                   placeholder="Enter your email"
                 />
+                {loading && (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-500 animate-spin" />
+                )}
               </div>
               {errors.email && (
                 <p className="mt-1 text-sm text-red-400">{errors.email}</p>
@@ -126,23 +130,28 @@ export default function Login() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-600 bg-transparent text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-20 transition-all duration-300"
+                  disabled={loading}
+                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-600 bg-transparent text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: errors.password ? "#ef4444" : undefined,
                   }}
                   placeholder="Enter your password"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
+                {loading ? (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-yellow-500 animate-spin" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                )}
               </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-400">{errors.password}</p>
@@ -156,10 +165,11 @@ export default function Login() {
               disabled={loading}
               type="button"
               onClick={handleSubmit}
-              className="w-full py-3 px-4 rounded-lg font-semibold text-black transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
+              className="w-full py-3 px-4 rounded-lg font-semibold text-black transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
               style={{ backgroundColor: "#FFBC0F" }}
             >
-              Sign In
+              {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+              {loading ? "Signing In..." : "Sign In"}
             </button>
           </div>
         </div>

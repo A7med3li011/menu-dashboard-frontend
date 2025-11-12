@@ -15,75 +15,25 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 18
-        cache: 'npm'
+        node-version: 18 # or your preferred version
 
-    - name: Install dependencies
+    - name: Install dependencies and build
       run: |
-        npm ci
-
-    - name: Build project
-      run: |
+        npm install
         npm run build
-      env:
-        CI: false
 
-    - name: Verify build output
-      run: |
-        echo "Build contents:"
-        ls -la dist/
-        [ -f dist/index.html ] && echo "✅ index.html exists" || echo "❌ index.html missing"
+    - name: Install SSH key
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.HOST }}
+        username: root
+        password: ${{ secrets.PASS }}
+        port: 22
+        script: |
+          rm -rf /var/www/menu/dashboard/*
+          mkdir -p /var/www/menu/dashboard/
 
-    - name: Install sshpass
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y sshpass
-
-    - name: Deploy to server
-      run: |
-        # Create deployment script
-        cat > deploy.sh << 'EOF'
-        #!/bin/bash
-        echo "=== Starting Deployment ==="
-        
-        # Create directory if it doesn't exist
-        mkdir -p /var/www/menu/client
-        
-        # Remove old files
-        echo "Cleaning old files..."
-        rm -rf /var/www/menu/client/*
-        
-        # Copy new files
-        echo "Copying new files..."
-        cp -r /tmp/deploy-dist/* /var/www/menu/client/
-        
-        # Fix permissions
-        echo "Fixing permissions..."
-        chown -R www-data:www-data /var/www/menu/client
-        chmod -R 755 /var/www/menu/client
-        
-        # Verify deployment
-        echo "Verifying deployment..."
-        if [ -f /var/www/menu/client/index.html ]; then
-          echo "✅ Deployment successful!"
-          echo "Files deployed:"
-          ls -la /var/www/menu/client/ | head -10
-        else
-          echo "❌ Deployment failed - index.html missing"
-          exit 1
-        fi
-        
-        # Reload nginx
-        echo "Reloading nginx..."
-        sudo nginx -t && sudo systemctl reload nginx
-        echo "✅ Nginx reloaded successfully"
-        EOF
-
-        # Copy build files to server
-        echo "Copying build files to server..."
-        sshpass -p "${{ secrets.PASS }}" scp -o StrictHostKeyChecking=no -r ./dist root@${{ secrets.HOST }}:/tmp/deploy-dist
-        
-        # Copy and run deployment script
-        echo "Running deployment script..."
-        sshpass -p "${{ secrets.PASS }}" scp -o StrictHostKeyChecking=no deploy.sh root@${{ secrets.HOST }}:/tmp/
-        sshpass -p "${{ secrets.PASS }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "bash /tmp/deploy.sh"
+    - name: Deploy files to server
+    - run: |
+        OUTPUT_DIR=$( [ -d dist ] && echo dist || echo build )
+        sshpass -p "${{ secrets.PASS }}" scp -o StrictHostKeyChecking=no -P 22 -r $OUTPUT_DIR/* root@${{ secrets.HOST }}:/var/www/menu/dashboard/

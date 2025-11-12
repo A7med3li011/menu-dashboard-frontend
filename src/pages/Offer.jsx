@@ -17,7 +17,6 @@ import {
 
 import {
   getOffers,
-  getproducts,
   createOffer,
   getSpecificOffer,
   deActiveOffer,
@@ -27,13 +26,12 @@ import {
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-// Offer Details Modal Component
+// Offer Details Modal Component - Simplified for image-only offers
 const OfferDetailsModal = ({
   offerId,
   isOpen,
   onClose,
   token,
-  allProducts,
 }) => {
   const [offerDetails, setOfferDetails] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -49,7 +47,6 @@ const OfferDetailsModal = ({
       setLoading(true);
       const response = await getSpecificOffer(offerId, token);
       let offerData = response.data || response;
-      // No mapping needed, items are already populated by backend
       setOfferDetails(offerData);
     } catch (error) {
       console.error("Error fetching offer details:", error);
@@ -63,10 +60,10 @@ const OfferDetailsModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-secondary rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-secondary rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-xl font-bold text-white">Offer Details</h2>
+          <h2 className="text-xl font-bold text-white">Offer Image</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors"
@@ -74,11 +71,6 @@ const OfferDetailsModal = ({
             <X size={24} />
           </button>
         </div>
-
-        {/* Debug log for items */}
-        {(() => {
-          return null;
-        })()}
 
         {/* Content */}
         <div className="p-6">
@@ -93,193 +85,25 @@ const OfferDetailsModal = ({
                 <div className="text-center">
                   <img
                     src={`${imageBase}${offerDetails.image}`}
-                    alt={offerDetails.title}
-                    className="w-full max-w-md mx-auto rounded-lg shadow-lg"
+                    alt="Offer"
+                    className="w-full max-w-full mx-auto rounded-lg shadow-lg"
                   />
                 </div>
               )}
 
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-400">
-                    Title
-                  </label>
-                  <p className="text-white font-semibold">
-                    {offerDetails.title}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-400">
-                    Status
-                  </label>
-                  <p
-                    className={`font-semibold ${
-                      offerDetails.isActive ? "text-green-400" : "text-red-400"
-                    }`}
-                  >
-                    {offerDetails.isActive ? "Active" : "Inactive"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-400">
-                    Price After Discount
-                  </label>
-                  <p className="text-popular font-bold text-lg">
-                    {parseFloat(offerDetails.priceAfterDiscount || 0).toFixed(
-                      2
-                    )}{" "}
-                    EG
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-400">
-                    Total Items
-                  </label>
-                  <p className="text-white font-semibold">
-                    {Array.isArray(offerDetails.items)
-                      ? offerDetails.items.length
-                      : 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="text-sm font-medium text-gray-400">
-                  Description
+              {/* Status */}
+              <div className="text-center">
+                <label className="text-sm font-medium text-gray-400 block mb-2">
+                  Status
                 </label>
-                <p className="text-white mt-1">{offerDetails.description}</p>
+                <p
+                  className={`font-semibold text-lg ${
+                    offerDetails.isActive ? "text-green-400" : "text-red-400"
+                  }`}
+                >
+                  {offerDetails.isActive ? "Active" : "Inactive"}
+                </p>
               </div>
-
-              {/* Items */}
-              {Array.isArray(offerDetails.items) &&
-                offerDetails.items.length > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-400 mb-3 block">
-                      Included Items ({offerDetails.items.length} products)
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {offerDetails.items.map((item, index) => {
-                        // Handle both populated items and item IDs
-                        let displayItem = item;
-                        if (
-                          typeof item === "string" &&
-                          allProducts &&
-                          Array.isArray(allProducts)
-                        ) {
-                          displayItem = allProducts.find(
-                            (product) => String(product._id) === String(item)
-                          ) || {
-                            _id: item,
-                            title: "Product not found",
-                            price: 0,
-                          };
-                        }
-
-                        return (
-                          <div
-                            key={displayItem?._id || displayItem?.id || index}
-                            className="bg-gray-800 rounded-lg p-3 border border-gray-700"
-                          >
-                            <div className="flex items-start gap-3">
-                              {/* Product Image if available */}
-                              {displayItem?.image && (
-                                <img
-                                  src={`${imageBase}${displayItem.image}`}
-                                  alt={displayItem.title}
-                                  className="w-12 h-12 object-cover rounded-md"
-                                />
-                              )}
-                              <div className="flex-1">
-                                <h4 className="text-white font-medium text-sm">
-                                  {displayItem?.title ||
-                                    displayItem?.name ||
-                                    `Item ${index + 1}`}
-                                </h4>
-                                <p className="text-popular font-semibold">
-                                  $
-                                  {parseFloat(displayItem?.price || 0).toFixed(
-                                    2
-                                  )}
-                                </p>
-                                {displayItem?.description && (
-                                  <p className="text-gray-400 text-xs mt-1 line-clamp-2">
-                                    {displayItem.description}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Price Summary */}
-                    <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400">Original Total:</span>
-                        <span className="text-white font-medium">
-                          {offerDetails.items
-                            .reduce((total, item) => {
-                              let displayItem = item;
-                              if (
-                                typeof item === "string" &&
-                                allProducts &&
-                                Array.isArray(allProducts)
-                              ) {
-                                displayItem = allProducts.find(
-                                  (product) =>
-                                    String(product._id) === String(item)
-                                );
-                              }
-                              return (
-                                total + parseFloat(displayItem?.price || 0)
-                              );
-                            }, 0)
-                            .toFixed(2)}{" "}
-                          EG
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm mt-1">
-                        <span className="text-gray-400">Offer Price:</span>
-                        <span className="text-popular font-bold">
-                          {parseFloat(
-                            offerDetails.priceAfterDiscount || 0
-                          ).toFixed(2)}{" "}
-                          EG
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm mt-1 pt-2 border-t border-gray-600">
-                        <span className="text-green-400 font-medium">
-                          You Save:
-                        </span>
-                        <span className="text-green-400 font-bold">
-                          {(
-                            offerDetails.items.reduce((total, item) => {
-                              let displayItem = item;
-                              if (
-                                typeof item === "string" &&
-                                allProducts &&
-                                Array.isArray(allProducts)
-                              ) {
-                                displayItem = allProducts.find(
-                                  (product) =>
-                                    String(product._id) === String(item)
-                                );
-                              }
-                              return (
-                                total + parseFloat(displayItem?.price || 0)
-                              );
-                            }, 0) -
-                            parseFloat(offerDetails.priceAfterDiscount || 0)
-                          ).toFixed(2)}{" "}
-                          EG
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -302,8 +126,8 @@ const OfferDetailsModal = ({
   );
 };
 
-// Offer Card Component
-const OfferCard = ({ data, onToggleStatus, onViewDetails, allProducts }) => {
+// Offer Card Component - Simplified for image-only offers
+const OfferCard = ({ data, onToggleStatus, onViewDetails }) => {
   const [isToggling, setIsToggling] = useState(false);
 
   const handleToggleStatus = async () => {
@@ -314,30 +138,6 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails, allProducts }) => {
     setIsToggling(false);
   };
 
-  const calculateOriginalPrice = (items) => {
-    if (!Array.isArray(items) || items.length === 0) return 0;
-    return items.reduce((total, item) => {
-      // If item is just an ID, find the full product details
-      if (
-        typeof item === "string" &&
-        allProducts &&
-        Array.isArray(allProducts)
-      ) {
-        const fullProduct = allProducts.find(
-          (product) => String(product._id) === String(item)
-        );
-        return total + (parseFloat(fullProduct?.price) || 0);
-      }
-      // If item is already an object with price
-      return total + (parseFloat(item?.price) || 0);
-    }, 0);
-  };
-
-  const getItemCount = (items) => {
-    if (!Array.isArray(items)) return 0;
-    return items.length;
-  };
-
   return (
     <>
       <div className="group bg-secondary rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-700/20 hover:border-popular/30">
@@ -345,12 +145,12 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails, allProducts }) => {
         <div className="relative overflow-hidden bg-black">
           {data?.image ? (
             <img
-              className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
+              className="w-full h-80 object-contain group-hover:scale-105 transition-transform duration-500"
               src={`${imageBase}${data.image}`}
-              alt={data?.title}
+              alt="Offer"
             />
           ) : (
-            <div className="w-full h-52 bg-gray-700 flex items-center justify-center">
+            <div className="w-full h-80 bg-gray-700 flex items-center justify-center">
               <Gift className="w-16 h-16 text-gray-500" />
             </div>
           )}
@@ -358,7 +158,7 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails, allProducts }) => {
 
           {/* Status badge */}
           <div
-            className={`absolute top-3 right-3 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium ${
+            className={`absolute top-3 right-3 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium ${
               data?.isActive ? "bg-green-500/90" : "bg-red-500/90"
             }`}
           >
@@ -367,49 +167,7 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails, allProducts }) => {
         </div>
 
         {/* Content Container */}
-        <div className="p-5 space-y-4">
-          <h3 className="text-xl font-bold text-white group-hover:text-popular transition-colors duration-300 leading-tight">
-            {data?.title}
-          </h3>
-
-          <p className="text-gray-300 text-sm line-clamp-2">
-            {data?.description}
-          </p>
-
-          <div className="space-y-3">
-            {/* Items */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
-                <Grid3X3 className="w-4 h-4 text-popular" />
-              </div>
-              <div className="flex-1">
-                <span className="text-gray-300 text-sm font-medium">Items</span>
-                <p className="text-white font-semibold">
-                  {getItemCount(data?.items)} products
-                </p>
-              </div>
-            </div>
-
-            {/* Price */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-popular/20 rounded-lg group-hover:bg-popular/30 transition-colors duration-300">
-                <Gift className="w-4 h-4 text-popular" />
-              </div>
-              <div className="flex-1">
-                <span className="text-gray-300 text-sm font-medium">Price</span>
-                <div className="flex items-center gap-2">
-                  {calculateOriginalPrice(data?.items) > 0 && (
-                    <span className="text-gray-400 text-sm line-through">
-                      {calculateOriginalPrice(data?.items).toFixed(2)} EG
-                    </span>
-                  )}
-                  <p className="text-popular font-bold text-lg">
-                    {parseFloat(data?.priceAfterDiscount || 0).toFixed(2)} EG
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="p-5 space-y-3">
 
           {/* Action Buttons */}
           <div className="pt-2 space-y-1.5">
@@ -453,7 +211,6 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails, allProducts }) => {
 const Offer = () => {
   const [state, setState] = useState(1); // 1: View Offers, 2: Create Offer
   const [offers, setOffers] = useState([]);
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -461,18 +218,11 @@ const Offer = () => {
   const offersLoaded = useRef(false);
   const token = useSelector((store) => store.user.token);
 
-  // Form state
+  // Form state - only image required
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    priceAfterDiscount: "",
-    items: [],
     image: null,
   });
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
 
   useEffect(() => {
     if (state === 1 && !offersLoaded.current) {
@@ -509,16 +259,6 @@ const Offer = () => {
     }
   };
 
-  const loadProducts = async () => {
-    try {
-      const response = await getproducts(token);
-      let productsData = response?.data || response?.products || response || [];
-      setProducts(productsData);
-    } catch (error) {
-      setProducts([]);
-      toast.error("Failed to load products");
-    }
-  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -538,10 +278,10 @@ const Offer = () => {
         return;
       }
 
-      // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024;
+      // Validate file size (max 800KB)
+      const maxSize = 800 * 1024;
       if (file.size > maxSize) {
-        toast.error("Image size must be less than 5MB");
+        toast.error("Image size must be less than 800KB");
         return;
       }
 
@@ -555,48 +295,24 @@ const Offer = () => {
     }
   };
 
-  const toggleProductSelection = (productId) => {
-    setFormData((prev) => ({
-      ...prev,
-      items: prev.items.includes(productId)
-        ? prev.items.filter((id) => id !== productId)
-        : [...prev.items, productId],
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.priceAfterDiscount ||
-      formData.items.length === 0 ||
-      !formData.image
-    ) {
-      toast.error(
-        "Please fill all required fields, select at least one product, and upload an image"
-      );
+    if (!formData.image) {
+      toast.error("Please upload an image");
       return;
     }
 
     try {
       setLoading(true);
       const formDataObj = new FormData();
-      formDataObj.append("title", formData.title);
-      formDataObj.append("description", formData.description);
-      formDataObj.append("priceAfterDiscount", formData.priceAfterDiscount);
-      formDataObj.append("items", JSON.stringify(formData.items));
       formDataObj.append("image", formData.image);
 
       await createOffer(formDataObj, token);
 
       // Reset form
       setFormData({
-        title: "",
-        description: "",
-        priceAfterDiscount: "",
-        items: [],
         image: null,
       });
       setImagePreview(null);
@@ -617,28 +333,11 @@ const Offer = () => {
 
   const handleReset = () => {
     setFormData({
-      title: "",
-      description: "",
-      priceAfterDiscount: "",
-      items: [],
       image: null,
     });
     setImagePreview(null);
   };
 
-  const getSelectedProducts = () => {
-    if (!Array.isArray(products)) return [];
-    return products.filter((product) =>
-      formData.items.some((id) => String(id) === String(product._id))
-    );
-  };
-
-  const calculateSelectedPrice = () => {
-    return getSelectedProducts().reduce(
-      (total, product) => total + (parseFloat(product?.price) || 0),
-      0
-    );
-  };
 
   const handleRemoveOffer = (id) => {
     setOffers((prevOffers) => prevOffers.filter((offer) => offer._id !== id));
@@ -708,13 +407,6 @@ const Offer = () => {
     setShowDetailsModal(true);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
 
   return (
     <div className="min-h-screen py-8">
@@ -758,7 +450,6 @@ const Offer = () => {
           setSelectedOfferId(null);
         }}
         token={token}
-        allProducts={products}
       />
 
       {/* Tab Content */}
@@ -830,7 +521,6 @@ const Offer = () => {
                         onDelete={handleRemoveOffer}
                         onToggleStatus={handleToggleOfferStatus}
                         onViewDetails={handleViewOfferDetails}
-                        allProducts={products}
                       />
                     </div>
                   ))}
@@ -866,7 +556,7 @@ const Offer = () => {
           {/* Stats Footer */}
           {Array.isArray(offers) && offers.length > 0 && (
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <p className="text-2xl font-bold text-popular">
                     {offers.length}
@@ -878,30 +568,6 @@ const Offer = () => {
                     {offers.filter((offer) => offer?.isActive).length}
                   </p>
                   <p className="text-sm text-gray-600">Active Offers</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {offers.reduce(
-                      (acc, offer) =>
-                        acc +
-                        (Array.isArray(offer?.items) ? offer.items.length : 0),
-                      0
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-600">Total Items</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {offers
-                      .reduce(
-                        (acc, offer) =>
-                          acc + parseFloat(offer?.priceAfterDiscount || 0),
-                        0
-                      )
-                      .toFixed(2)}{" "}
-                    EG
-                  </p>
-                  <p className="text-sm text-gray-600">Total Value</p>
                 </div>
               </div>
             </div>
@@ -924,58 +590,7 @@ const Offer = () => {
             {/* Form */}
             <div className="px-6 py-8">
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
-                      Offer Title *
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      placeholder="Enter offer title"
-                      className="w-full px-4 py-3 border-popular/60 border-[1px] bg-secondary rounded-lg focus:outline-none transition-colors text-white placeholder-gray-400"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
-                      Price After Discount *
-                    </label>
-                    <input
-                      type="text"
-                      name="priceAfterDiscount"
-                      value={formData.priceAfterDiscount}
-                      onChange={handleInputChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      className="w-full px-4 py-3 border-popular/60 border-[1px] bg-secondary rounded-lg focus:outline-none transition-colors text-white placeholder-gray-400"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Description *
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    placeholder="Enter offer description"
-                    className="w-full px-4 py-3 border-popular/60 border-[1px] bg-secondary rounded-lg focus:outline-none transition-colors text-white placeholder-gray-400"
-                    required
-                  />
-                </div>
-
-                {/* Image Upload */}
+                {/* Image Upload - Only Field */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
                     Offer Image *
@@ -987,7 +602,7 @@ const Offer = () => {
                           <img
                             src={imagePreview}
                             alt="Preview"
-                            className="mx-auto h-32 w-32 object-cover rounded-lg shadow-md"
+                            className="mx-auto h-64 w-auto object-cover rounded-lg shadow-md"
                           />
                           <p className="text-sm text-gray-400 mt-2">
                             {formData.image?.name}
@@ -1014,101 +629,10 @@ const Offer = () => {
                         <p className="pl-1 text-gray-400">or drag and drop</p>
                       </div>
                       <p className="text-xs text-gray-500">
-                        PNG, JPG, GIF up to 5MB
+                        PNG, JPG, GIF, WebP up to 800KB
                       </p>
                     </div>
                   </div>
-                </div>
-
-                {/* Product Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Select Products * ({formData.items.length} selected)
-                  </label>
-                  {formData.items.length > 0 && (
-                    <div className="mb-4 p-3 bg-popular/10 rounded-lg border border-popular/20">
-                      <div className="text-sm text-gray-300 mb-2">
-                        Selected Products:
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {getSelectedProducts().map((product) => (
-                          <span
-                            key={product._id}
-                            className="bg-popular/20 text-popular px-2 py-1 rounded text-sm flex items-center gap-1"
-                          >
-                            {product.title} (${product.price})
-                            <button
-                              type="button"
-                              onClick={() =>
-                                toggleProductSelection(product._id)
-                              }
-                              className="ml-1 text-popular hover:text-white"
-                            >
-                              <X size={12} />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="text-sm font-medium text-white">
-                        Original Total: {calculateSelectedPrice().toFixed(2)} EG
-                        {formData.priceAfterDiscount && (
-                          <span className="ml-2 text-green-400">
-                            You Save: EG
-                            {(
-                              calculateSelectedPrice() -
-                              parseFloat(formData.priceAfterDiscount || 0)
-                            ).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
-                    {Array.isArray(products) &&
-                      products.map((product) => (
-                        <div
-                          key={product._id}
-                          className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                            formData.items.includes(product._id)
-                              ? "border-popular bg-popular/10"
-                              : "border-gray-600 hover:border-popular/50"
-                          }`}
-                          onClick={() => toggleProductSelection(product._id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={formData.items.some(
-                                (id) => String(id) === String(product._id)
-                              )}
-                              onChange={() =>
-                                toggleProductSelection(product._id)
-                              }
-                              className="rounded text-popular"
-                            />
-                            <div className="flex-1">
-                              <h5 className="font-medium text-sm text-white">
-                                {product.title}
-                              </h5>
-                              <p className="text-xs text-gray-400">
-                                {product.price} EG
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Show message if no products available */}
-                  {!Array.isArray(products) ||
-                    (products.length === 0 && (
-                      <div className="text-center py-8">
-                        <p className="text-gray-400">
-                          No products available. Please add products first.
-                        </p>
-                      </div>
-                    ))}
                 </div>
 
                 {/* Submit Buttons */}
@@ -1147,12 +671,10 @@ const Offer = () => {
               Instructions:
             </h3>
             <ul className="text-sm text-white space-y-1">
-              <li>• Offer title should be descriptive and attractive</li>
-              <li>• Select multiple products to create combo offers</li>
-              <li>• Set a discounted price lower than the original total</li>
-              <li>• Image should be clear and represent the offer well</li>
-              <li>• Supported formats: JPG, PNG, GIF (max 5MB)</li>
-              <li>• Recommended image size: 300x300 pixels or larger</li>
+              <li>• Upload a clear, high-quality image for your offer</li>
+              <li>• Image should be attractive and represent the offer well</li>
+              <li>• Supported formats: JPG, PNG, GIF, WebP (max 800KB)</li>
+              <li>• Recommended image dimensions: 1200x600 pixels or similar aspect ratio</li>
             </ul>
           </div>
         </div>

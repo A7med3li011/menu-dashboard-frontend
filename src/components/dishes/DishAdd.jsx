@@ -47,12 +47,10 @@ const validationSchema = Yup.object({
   ingredients: Yup.array()
     .of(
       Yup.string()
-        .required("Ingredient cannot be empty")
         .min(1, "Ingredient must be at least 1 character")
         .max(50, "Ingredient must not exceed 50 characters")
         .trim()
     )
-    .min(1, "At least one ingredient is required")
     .max(20, "Maximum 20 ingredients allowed"),
   extras: Yup.array()
     .of(
@@ -72,9 +70,9 @@ const validationSchema = Yup.object({
     .max(10, "Maximum 10 extras allowed"),
   image: Yup.mixed()
     .required("Image is required")
-    .test("fileSize", "File size is too large (max 5MB)", (value) => {
+    .test("fileSize", "File size is too large (max 800KB)", (value) => {
       if (!value) return true;
-      return value.size <= 5 * 1024 * 1024; // 5MB
+      return value.size <= 800 * 1024; // 800KB
     })
     .test("fileType", "Unsupported file format", (value) => {
       if (!value) return true;
@@ -452,7 +450,7 @@ export default function DishAdd() {
             {/* Ingredients */}
             <div className="w-full">
               <label className="block font-semibold mb-2">
-                Ingredients * ({formik.values.ingredients.length}/20)
+                Ingredients ({formik.values.ingredients.length}/20)
               </label>
               <div className="space-y-3">
                 {formik.values.ingredients.map((ingredient, index) => (

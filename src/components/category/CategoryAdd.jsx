@@ -15,8 +15,8 @@ const categorySchema = Yup.object().shape({
     .required("Title is required"),
   image: Yup.mixed()
     .required("Image is required")
-    .test("fileSize", "File size is too large (max 5MB)", (value) => {
-      return value && value.size <= 5 * 1024 * 1024;
+    .test("fileSize", "File size is too large (max 800KB)", (value) => {
+      return value && value.size <= 800 * 1024;
     })
     .test("fileType", "Unsupported file format", (value) => {
       return (
@@ -209,7 +209,7 @@ export default function CategoryAdd() {
                           </label>
                         </div>
                         <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 5MB
+                          PNG, JPG, GIF up to 800KB
                         </p>
                       </div>
                     </label>
@@ -254,7 +254,7 @@ export default function CategoryAdd() {
           <ul className="text-sm text-white space-y-1">
             <li>• Category title should be descriptive and concise</li>
             <li>• Image should be clear and represent the category well</li>
-            <li>• Supported formats: JPG, PNG, GIF (max 5MB)</li>
+            <li>• Supported formats: JPG, PNG, GIF (max 800KB)</li>
             <li>• Recommended image size: 300x300 pixels or larger</li>
           </ul>
         </div>

@@ -250,10 +250,10 @@ export default function EditCategory() {
         return;
       }
 
-      // Validate file size (e.g., max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      // Validate file size (e.g., max 800KB)
+      const maxSize = 800 * 1024; // 800KB in bytes
       if (file.size > maxSize) {
-        toast.error("Image size must be less than 5MB");
+        toast.error("Image size must be less than 800KB");
         return;
       }
 

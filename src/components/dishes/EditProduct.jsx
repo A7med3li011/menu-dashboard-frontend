@@ -46,8 +46,7 @@ const createProductSchema = (isEdit, hasExistingImage) =>
     category: Yup.string().required("Category is required"),
     subCategory: Yup.string().required("Subcategory is required"),
     ingredients: Yup.array()
-      .min(1, "At least one ingredient must be added")
-      .required("Ingredients are required"),
+      .max(20, "Maximum 20 ingredients allowed"),
     extras: Yup.array()
       .of(
         Yup.object().shape({
@@ -339,10 +338,10 @@ export default function EditProduct() {
         return;
       }
 
-      // Validate file size (e.g., max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      // Validate file size (e.g., max 800KB)
+      const maxSize = 800 * 1024; // 800KB in bytes
       if (file.size > maxSize) {
-        toast.error("Image size must be less than 5MB");
+        toast.error("Image size must be less than 800KB");
         return;
       }
 

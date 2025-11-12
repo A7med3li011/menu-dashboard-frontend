@@ -16,8 +16,8 @@ const categorySchema = Yup.object().shape({
     .required("Title is required"),
   image: Yup.mixed()
     .required("Image is required")
-    .test("fileSize", "File size is too large (max 5MB)", (value) => {
-      return value && value.size <= 5 * 1024 * 1024;
+    .test("fileSize", "File size is too large (max 800KB)", (value) => {
+      return value && value.size <= 800 * 1024;
     })
     .test("fileType", "Unsupported file format", (value) => {
       return (
@@ -273,7 +273,7 @@ export default function SubCategoryAdd() {
                           <p className="pl-1 text-gray-400">or drag and drop</p>
                         </div>
                         <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 5MB
+                          PNG, JPG, GIF up to 800KB
                         </p>
                       </div>
                     </div>
@@ -317,7 +317,7 @@ export default function SubCategoryAdd() {
             <li>• Select a parent category from the dropdown</li>
             <li>• Sub category title should be descriptive and concise</li>
             <li>• Image should be clear and represent the sub category well</li>
-            <li>• Supported formats: JPG, PNG, GIF (max 5MB)</li>
+            <li>• Supported formats: JPG, PNG, GIF (max 800KB)</li>
             <li>• Recommended image size: 300x300 pixels or larger</li>
           </ul>
         </div>

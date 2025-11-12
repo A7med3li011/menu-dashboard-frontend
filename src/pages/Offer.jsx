@@ -27,12 +27,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 // Offer Details Modal Component - Simplified for image-only offers
-const OfferDetailsModal = ({
-  offerId,
-  isOpen,
-  onClose,
-  token,
-}) => {
+const OfferDetailsModal = ({ offerId, isOpen, onClose, token }) => {
   const [offerDetails, setOfferDetails] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -168,15 +163,8 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails }) => {
 
         {/* Content Container */}
         <div className="p-5 space-y-3">
-
           {/* Action Buttons */}
           <div className="pt-2 space-y-1.5">
-            <button
-              onClick={() => onViewDetails && onViewDetails(data?._id)}
-              className="w-full py-2 bg-popular/10 hover:bg-popular text-popular hover:text-white border border-popular/30 hover:border-popular rounded-lg font-medium text-sm transition-all duration-300"
-            >
-              View Offer Details
-            </button>
             <div className="flex gap-2">
               <button
                 onClick={handleToggleStatus}
@@ -223,7 +211,6 @@ const Offer = () => {
     image: null,
   });
 
-
   useEffect(() => {
     if (state === 1 && !offersLoaded.current) {
       loadOffers();
@@ -259,7 +246,6 @@ const Offer = () => {
     }
   };
 
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -294,7 +280,6 @@ const Offer = () => {
       reader.readAsDataURL(file);
     }
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -337,7 +322,6 @@ const Offer = () => {
     });
     setImagePreview(null);
   };
-
 
   const handleRemoveOffer = (id) => {
     setOffers((prevOffers) => prevOffers.filter((offer) => offer._id !== id));
@@ -406,7 +390,6 @@ const Offer = () => {
     setSelectedOfferId(offerId);
     setShowDetailsModal(true);
   };
-
 
   return (
     <div className="min-h-screen py-8">
@@ -674,7 +657,10 @@ const Offer = () => {
               <li>• Upload a clear, high-quality image for your offer</li>
               <li>• Image should be attractive and represent the offer well</li>
               <li>• Supported formats: JPG, PNG, GIF, WebP (max 800KB)</li>
-              <li>• Recommended image dimensions: 1200x600 pixels or similar aspect ratio</li>
+              <li>
+                • Recommended image dimensions: 1200x600 pixels or similar
+                aspect ratio
+              </li>
             </ul>
           </div>
         </div>

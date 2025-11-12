@@ -159,7 +159,7 @@ export default function Login() {
               className="w-full py-3 px-4 rounded-lg font-semibold text-black transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
               style={{ backgroundColor: "#FFBC0F" }}
             >
-              Sign In
+              Login
             </button>
           </div>
         </div>

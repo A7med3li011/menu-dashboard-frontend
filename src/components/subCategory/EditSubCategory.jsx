@@ -344,6 +344,7 @@ export default function EditSubCategory() {
 
   const confirmCancel = () => {
     setShowCancelModal(false);
+
     navigate("/subcategories");
   };
 

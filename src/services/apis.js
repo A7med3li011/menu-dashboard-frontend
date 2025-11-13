@@ -322,6 +322,14 @@ export async function deActiveOffer(offerId, token) {
   );
   return data;
 }
+export async function deleteOffer(offerId, token) {
+  const { data } = await axios.delete(`${baseUrl}/offers/${offerId}`, {
+    headers: {
+      token: `${token}`,
+    },
+  });
+  return data;
+}
 export async function getReviews(token) {
   const { data } = await axios.get(
     `${baseUrl}/review`,

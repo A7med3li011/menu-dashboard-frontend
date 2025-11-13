@@ -21,6 +21,7 @@ import {
   getSpecificOffer,
   deActiveOffer,
   activeOffer,
+  deleteOffer,
   imageBase,
 } from "../services/apis";
 import { useSelector } from "react-redux";
@@ -122,8 +123,9 @@ const OfferDetailsModal = ({ offerId, isOpen, onClose, token }) => {
 };
 
 // Offer Card Component - Simplified for image-only offers
-const OfferCard = ({ data, onToggleStatus, onViewDetails }) => {
+const OfferCard = ({ data, onToggleStatus, onViewDetails, onDelete }) => {
   const [isToggling, setIsToggling] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleToggleStatus = async () => {
     setIsToggling(true);
@@ -131,6 +133,14 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails }) => {
       await onToggleStatus(data?._id);
     }
     setIsToggling(false);
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    if (onDelete) {
+      await onDelete(data?._id);
+    }
+    setIsDeleting(false);
   };
 
   return (
@@ -168,12 +178,12 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails }) => {
             <div className="flex gap-2">
               <button
                 onClick={handleToggleStatus}
-                disabled={isToggling}
+                disabled={isToggling || isDeleting}
                 className={`flex-1 py-2 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-1 ${
                   data?.isActive
                     ? "bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50"
                     : "bg-green-500/20 hover:bg-green-500/30 text-green-400 hover:text-green-300 border border-green-500/30 hover:border-green-500/50"
-                } ${isToggling ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isToggling || isDeleting ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {isToggling ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -185,6 +195,24 @@ const OfferCard = ({ data, onToggleStatus, onViewDetails }) => {
                       <Power className="w-4 h-4" />
                     )}
                     <span>{data?.isActive ? "Deactivate" : "Activate"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting || isToggling}
+                className={`flex-1 py-2 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 border border-red-600/30 hover:border-red-600/50 ${
+                  isDeleting || isToggling ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
                   </>
                 )}
               </button>
@@ -325,6 +353,39 @@ const Offer = () => {
 
   const handleRemoveOffer = (id) => {
     setOffers((prevOffers) => prevOffers.filter((offer) => offer._id !== id));
+  };
+
+  const handleDeleteOffer = async (id) => {
+    // Validate token
+    if (!token) {
+      toast.error("Authentication token is missing. Please log in again.");
+      return;
+    }
+
+    try {
+      await deleteOffer(id, token);
+
+      // Remove from local state
+      setOffers((prevOffers) => prevOffers.filter((offer) => offer._id !== id));
+
+      toast.success("Offer deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting offer:", error);
+
+      let errorMessage = "Error deleting offer";
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 401) {
+        errorMessage = "Authentication failed. Please log in again.";
+      } else if (error.response?.status === 403) {
+        errorMessage = "You don't have permission to perform this action.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+    }
   };
 
   const handleToggleOfferStatus = async (id) => {
@@ -501,7 +562,7 @@ const Offer = () => {
                     >
                       <OfferCard
                         data={offer}
-                        onDelete={handleRemoveOffer}
+                        onDelete={handleDeleteOffer}
                         onToggleStatus={handleToggleOfferStatus}
                         onViewDetails={handleViewOfferDetails}
                       />

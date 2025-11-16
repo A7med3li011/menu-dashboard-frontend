@@ -15,7 +15,7 @@ import { useSelector } from "react-redux";
 import { Upload, X, Plus, Minus } from "lucide-react";
 
 // Dynamic schema - simplified for existing images
-const createProductSchema = (isEdit, hasExistingImage) =>
+const createProductSchema = (isEdit, hasExistingImage, hasSubcategories) =>
   Yup.object({
     title: Yup.string()
       .required("Product title is required")
@@ -44,7 +44,9 @@ const createProductSchema = (isEdit, hasExistingImage) =>
         }
       ),
     category: Yup.string().required("Category is required"),
-    subCategory: Yup.string().required("Subcategory is required"),
+    subCategory: hasSubcategories
+      ? Yup.string().required("Subcategory is required when available")
+      : Yup.string().nullable(),
     ingredients: Yup.array()
       .max(20, "Maximum 20 ingredients allowed"),
     extras: Yup.array()
@@ -93,6 +95,7 @@ export default function EditProduct() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [validationSchema, setValidationSchema] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [hasSubcategories, setHasSubcategories] = useState(false);
   const { id } = useParams();
   const token = useSelector((store) => store.user.token);
   const navigate = useNavigate();
@@ -100,9 +103,9 @@ export default function EditProduct() {
 
   // Initialize validation schema
   useEffect(() => {
-    const schema = createProductSchema(isEdit, hasExistingImage);
+    const schema = createProductSchema(isEdit, hasExistingImage, hasSubcategories);
     setValidationSchema(schema);
-  }, [isEdit, hasExistingImage]);
+  }, [isEdit, hasExistingImage, hasSubcategories]);
 
   const formik = useFormik({
     initialValues: {
@@ -164,7 +167,20 @@ export default function EditProduct() {
     queryKey: ["subcategories", selectedCategory],
     queryFn: () => getSubcategories(selectedCategory, token),
     enabled: !!selectedCategory,
+    onSuccess: (data) => {
+      // Update hasSubcategories based on whether data exists and has items
+      setHasSubcategories(data && data.length > 0);
+    },
   });
+
+  // Update hasSubcategories when subcategoriesData changes
+  useEffect(() => {
+    if (subcategoriesData) {
+      setHasSubcategories(subcategoriesData.length > 0);
+    } else {
+      setHasSubcategories(false);
+    }
+  }, [subcategoriesData]);
 
   // Fetch product data for editing
   const {
@@ -718,7 +734,7 @@ export default function EditProduct() {
                 htmlFor="subCategory"
                 className="block text-white font-medium mb-2"
               >
-                Subcategory <span className="text-red-400">*</span>
+                Subcategory {hasSubcategories ? <span className="text-red-400">*</span> : "- Optional"}
               </label>
               <select
                 id="subCategory"

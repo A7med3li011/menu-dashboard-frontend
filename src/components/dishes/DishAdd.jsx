@@ -4,15 +4,15 @@ import {
   getCategories,
   getSubcategories,
 } from "../../services/apis";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 
-// Validation Schema
-const validationSchema = Yup.object({
+// Validation Schema - function to create dynamic schema
+const createValidationSchema = (hasSubcategories) => Yup.object({
   title: Yup.string()
     .required("Dish name is required")
     .min(2, "Dish name must be at least 2 characters")
@@ -24,7 +24,9 @@ const validationSchema = Yup.object({
     .max(500, "Description must not exceed 500 characters")
     .trim(),
   category: Yup.string().required("Category is required"),
-  subCategory: Yup.string().required("Subcategory is required"),
+  subCategory: hasSubcategories
+    ? Yup.string().required("Subcategory is required when available")
+    : Yup.string().nullable(),
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive")
@@ -89,6 +91,7 @@ const validationSchema = Yup.object({
 export default function DishAdd() {
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [hasSubcategories, setHasSubcategories] = useState(false);
   const navigate = useNavigate();
 
   // Queries
@@ -113,7 +116,20 @@ export default function DishAdd() {
     queryFn: () => getSubcategories(selectedCategory, token),
     enabled: !!selectedCategory,
     refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      // Update hasSubcategories based on whether data exists and has items
+      setHasSubcategories(data && data.length > 0);
+    },
   });
+
+  // Update hasSubcategories when subcategoryList changes
+  useEffect(() => {
+    if (subcategoryList) {
+      setHasSubcategories(subcategoryList.length > 0);
+    } else {
+      setHasSubcategories(false);
+    }
+  }, [subcategoryList]);
 
   // Mutation
   const { mutate, isLoading: isSubmitting } = useMutation({
@@ -129,6 +145,11 @@ export default function DishAdd() {
     },
   });
 
+  // Create validation schema based on hasSubcategories
+  const validationSchema = useMemo(() => {
+    return createValidationSchema(hasSubcategories);
+  }, [hasSubcategories]);
+
   const formik = useFormik({
     initialValues: {
       title: "",
@@ -142,6 +163,7 @@ export default function DishAdd() {
       image: null,
     },
     validationSchema,
+    enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
         // Create FormData for file upload
@@ -351,7 +373,9 @@ export default function DishAdd() {
 
             {/* Subcategory */}
             <div className="w-full">
-              <label className="block font-semibold mb-2">Subcategory *</label>
+              <label className="block font-semibold mb-2">
+                Subcategory {hasSubcategories ? "*" : "- Optional"}
+              </label>
               <select
                 name="subCategory"
                 value={formik.values.subCategory}
